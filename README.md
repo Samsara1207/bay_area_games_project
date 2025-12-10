@@ -8,10 +8,31 @@ This project aims to address these core pain points by building an integrated di
 <img width="864" height="606" alt="0a9e6435-4265-4913-9740-1c6543dbafcc" src="https://github.com/user-attachments/assets/085081df-8350-454a-8f73-ba158f903d8c" />
 
 3.Dependencies
-# Install Django and DRF
-pip install django djangorestframework
-# Optional: Install a tool for formatting JSON responses (for ease of debugging)
-pip install pygments
+# Core Framework
+Django==4.2.10
+djangorestframework==3.15.2
+
+# DRF Extensions
+django-filter==23.3
+django-cors-headers==4.3.0
+
+# Database (Select based on the actual database used)
+# Required for MySQL
+# pymysql==1.1.0
+# Required for PostgreSQL
+# psycopg2-binary==2.9.9
+
+# General Tools (Likely needed for custom Apps)
+pytz==2024.1
+python-dateutil==2.8.2
+Pillow==10.2.0  # Image processing
+
+# Optional: JWT Authentication
+djangorestframework-simplejwt==5.3.0
+
+# Optional: Redis Caching
+# django-redis==5.3.0
+# redis==4.6.0
 
 4.Running Steps
 Open Command Prompt (CMD) and navigate to the project directory.
