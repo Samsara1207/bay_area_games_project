@@ -8,6 +8,10 @@ This project aims to address these core pain points by building an integrated di
 <img width="864" height="606" alt="0a9e6435-4265-4913-9740-1c6543dbafcc" src="https://github.com/user-attachments/assets/085081df-8350-454a-8f73-ba158f903d8c" />
 
 3.Dependencies
+# Install Django and DRF
+pip install django djangorestframework
+# Optional: Install a tool for formatting JSON responses (for ease of debugging)
+pip install pygments
 
 4.Running Steps
 Open Command Prompt (CMD) and navigate to the project directory.
