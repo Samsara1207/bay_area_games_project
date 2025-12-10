@@ -12,25 +12,8 @@ appeal_arbitration	Appeal and Arbitration Module	appeal (appeal), arbitration_co
 business	Commercial Operation Module	sponsor (sponsor), sponsor_rights (sponsorship rights), audience_ticket (ticketing)	Sponsor management, rights execution, and ticket sales
 data_statistics	Data Statistics Module	data_report (statistics report)	Data statistics and report generation
  
-bay_area_games_project/
-├── manage.py
-├── bay_area_games/  # Project main directory (contains settings.py/urls.py/wsgi.py)
-├── basic_info/      # Basic Information App
-│   ├── models.py    # Models (Team/Athlete)
-│   ├── serializers.py  # Serializers (data format conversion for API)
-│   ├── views.py     # ViewSets (business logic processing)
-│   ├── urls.py      # Sub URL routing (API path configuration)
-│   ├── permissions.py  # Custom permissions (API access control)
-│   └── filters.py   # Filters (data query condition filtering)
-├── event_management/  # Event Management App (same structure as above)
-├── referee_management/  # Referee Management App
-├── result_management/  # Result and Medal Management App
-├── logistics/  # Logistics Support App
-├── operation/  # Event Operation App
-├── appeal_arbitration/  # Appeal and Arbitration App
-├── business/  # Commercial Operation App
-├── finance_safety/  # Finance and Safety App
-└── data_statistics/  # Data Statistics and Reporting App
+<img width="864" height="606" alt="0a9e6435-4265-4913-9740-1c6543dbafcc" src="https://github.com/user-attachments/assets/085081df-8350-454a-8f73-ba158f903d8c" />
+
  
 Running Steps
 Open Command Prompt (CMD) and navigate to the project directory.
