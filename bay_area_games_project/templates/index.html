@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">欢迎使用大湾区运动会管理系统</h1>
+        <p class="hero-subtitle">全面管理赛事、运动员、成绩和统计数据</p>
+        <div class="hero-actions">
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">进入仪表盘</a>
+            <a href="{% url 'teams' %}" class="btn btn-outline btn-lg">管理代表队</a>
+        </div>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="container">
+        <h2 class="section-title">系统功能</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3>基础信息管理</h3>
+                <p>代表队和运动员信息管理，支持资格审核</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏟️</div>
+                <h3>赛事项目管理</h3>
+                <p>场地、项目、分组和报名管理</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚖️</div>
+                <h3>裁判管理</h3>
+                <p>裁判信息、分组和执裁安排</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏅</div>
+                <h3>成绩与奖牌</h3>
+                <p>成绩录入、排名计算、奖牌颁发</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚌</div>
+                <h3>后勤保障</h3>
+                <p>供应商、后勤明细、志愿者管理</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>数据统计</h3>
+                <p>多维度统计报表生成和展示</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-section">
+    <div class="container">
+        <h2 class="section-title">实时统计</h2>
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="statTeams">-</div>
+                <div class="stat-label">代表队</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statAthletes">-</div>
+                <div class="stat-label">运动员</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statEvents">-</div>
+                <div class="stat-label">比赛项目</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statMedals">-</div>
+                <div class="stat-label">奖牌总数</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 加载统计数据
+    loadHomeStats();
+});
+
+function loadHomeStats() {
+    Promise.all([
+        api.get('/api/basic/teams/'),
+        api.get('/api/basic/athletes/'),
+        api.get('/api/events/events/'),
+        api.get('/api/results/medal-honors/')
+    ]).then(([teams, athletes, events, medals]) => {
+        document.getElementById('statTeams').textContent = teams.count || 0;
+        document.getElementById('statAthletes').textContent = athletes.count || 0;
+        document.getElementById('statEvents').textContent = events.count || 0;
+        document.getElementById('statMedals').textContent = medals.count || 0;
+    }).catch(err => {
+        console.error('加载统计数据失败:', err);
+    });
+}
+</script>
+{% endblock %}
+

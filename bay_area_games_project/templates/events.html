@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}赛事管理 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>赛事管理</h1>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>比赛场地</h3>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="venueCount">-</div>
+            <div class="stat-label">场地总数</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>比赛项目</h3>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="eventCount">-</div>
+            <div class="stat-label">项目总数</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>报名人数</h3>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="registrationCount">-</div>
+            <div class="stat-label">总报名数</div>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h3>比赛项目列表</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table" id="eventsTable">
+                <thead>
+                    <tr>
+                        <th>项目名称</th>
+                        <th>项目类型</th>
+                        <th>比赛场地</th>
+                        <th>比赛时间</th>
+                        <th>报名人数</th>
+                        <th>特色项目</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadEvents();
+});
+
+function loadEvents() {
+    Promise.all([
+        api.get('/api/events/venues/'),
+        api.get('/api/events/events/'),
+        api.get('/api/events/athlete-events/')
+    ]).then(([venues, events, registrations]) => {
+        document.getElementById('venueCount').textContent = venues.count || 0;
+        document.getElementById('eventCount').textContent = events.count || 0;
+        document.getElementById('registrationCount').textContent = registrations.count || 0;
+        
+        displayEvents(events.results || []);
+    }).catch(err => {
+        console.error('加载赛事数据失败:', err);
+    });
+}
+
+function displayEvents(events) {
+    const tbody = document.querySelector('#eventsTable tbody');
+    if (events.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = events.map(event => {
+        const venueName = event.venue?.venue_name || '-';
+        const eventTime = event.event_time ? formatDateTime(event.event_time) : '-';
+        const bayFeature = event.bay_feature === '是' 
+            ? '<span class="badge badge-warning">大湾区特色</span>' 
+            : '-';
+        
+        return `
+            <tr>
+                <td>${event.event_name}</td>
+                <td>${event.event_type}</td>
+                <td>${venueName}</td>
+                <td>${eventTime}</td>
+                <td>${event.athlete_events?.length || 0}</td>
+                <td>${bayFeature}</td>
+            </tr>
+        `;
+    }).join('');
+}
+</script>
+{% endblock %}
+

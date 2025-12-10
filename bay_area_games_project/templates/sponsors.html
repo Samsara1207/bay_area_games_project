@@ -1,0 +1,1003 @@
+{% extends "base.html" %}
+
+{% block title %}商务合作管理 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>商务合作管理</h1>
+</div>
+
+<!-- 标签页导航 -->
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('sponsors')">赞助商管理</button>
+    <button class="tab-btn" onclick="switchTab('rights')">赞助权益</button>
+    <button class="tab-btn" onclick="switchTab('tickets')">观众票务</button>
+</div>
+
+<!-- 赞助商管理标签页 -->
+<div id="sponsors-tab" class="tab-content active">
+    <div class="card">
+        <div class="card-header">
+            <h3>赞助商列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="search-box">
+                    <input type="text" id="sponsorSearch" class="form-control" placeholder="搜索赞助商..." onkeyup="filterSponsors()">
+                </div>
+                <select id="sponsorTypeFilter" class="form-control" onchange="filterSponsors()" style="max-width: 150px;">
+                    <option value="">全部类型</option>
+                    <option value="现金">现金</option>
+                    <option value="物资">物资</option>
+                    <option value="服务">服务</option>
+                </select>
+                <button class="btn btn-primary" onclick="showAddSponsorModal()">+ 添加赞助商</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="sponsorsTable">
+                    <thead>
+                        <tr>
+                            <th>赞助商名称</th>
+                            <th>赞助类型</th>
+                            <th>赞助金额/物资</th>
+                            <th>联系人</th>
+                            <th>联系电话</th>
+                            <th>权益数</th>
+                            <th>总曝光</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="8" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 赞助权益标签页 -->
+<div id="rights-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>赞助权益列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="search-box">
+                    <input type="text" id="rightsSearch" class="form-control" placeholder="搜索..." onkeyup="filterRights()">
+                </div>
+                <select id="rightsTypeFilter" class="form-control" onchange="filterRights()" style="max-width: 150px;">
+                    <option value="">全部类型</option>
+                    <option value="冠名">冠名</option>
+                    <option value="广告">广告</option>
+                    <option value="颁奖">颁奖</option>
+                    <option value="物料赞助">物料赞助</option>
+                </select>
+                <select id="rightsStatusFilter" class="form-control" onchange="filterRights()" style="max-width: 150px;">
+                    <option value="">全部状态</option>
+                    <option value="已执行">已执行</option>
+                    <option value="未执行">未执行</option>
+                    <option value="部分执行">部分执行</option>
+                </select>
+                <button class="btn btn-primary" onclick="showAddRightsModal()">+ 添加权益</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="rightsTable">
+                    <thead>
+                        <tr>
+                            <th>赞助商</th>
+                            <th>项目</th>
+                            <th>权益类型</th>
+                            <th>执行状态</th>
+                            <th>曝光次数</th>
+                            <th>媒体渠道</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 观众票务标签页 -->
+<div id="tickets-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>观众票务列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="search-box">
+                    <input type="text" id="ticketSearch" class="form-control" placeholder="搜索观众..." onkeyup="filterTickets()">
+                </div>
+                <select id="ticketChannelFilter" class="form-control" onchange="filterTickets()" style="max-width: 150px;">
+                    <option value="">全部渠道</option>
+                    <option value="大湾区线上">大湾区线上</option>
+                    <option value="大湾区线下">大湾区线下</option>
+                    <option value="其他">其他</option>
+                </select>
+                <select id="ticketRefundFilter" class="form-control" onchange="filterTickets()" style="max-width: 150px;">
+                    <option value="">全部状态</option>
+                    <option value="未退票">未退票</option>
+                    <option value="已退票">已退票</option>
+                </select>
+                <button class="btn btn-secondary" onclick="showTicketStatistics()">统计</button>
+                <button class="btn btn-primary" onclick="showAddTicketModal()">+ 添加票务</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="ticketsTable">
+                    <thead>
+                        <tr>
+                            <th>观众姓名</th>
+                            <th>证件号</th>
+                            <th>项目</th>
+                            <th>座位号</th>
+                            <th>票价</th>
+                            <th>购票渠道</th>
+                            <th>退票状态</th>
+                            <th>确认状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="9" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑赞助商模态框 -->
+<div id="sponsorModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSponsorModal()">&times;</span>
+        <h2 id="sponsorModalTitle">添加赞助商</h2>
+        <form id="sponsorForm" onsubmit="saveSponsor(event)">
+            <input type="hidden" id="sponsorId">
+            <div class="form-group">
+                <label class="form-label">赞助商名称 *</label>
+                <input type="text" id="sponsorName" class="form-control" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">赞助类型 *</label>
+                    <select id="sponsorType" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="现金">现金</option>
+                        <option value="物资">物资</option>
+                        <option value="服务">服务</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">赞助金额/物资 *</label>
+                    <input type="text" id="sponsorValue" class="form-control" required placeholder="如：100000元 或 运动服100套">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">合作期限</label>
+                <input type="text" id="sponsorPeriod" class="form-control" placeholder="如：2025-01-01至2025-12-31">
+            </div>
+            <div class="form-group">
+                <label class="form-label">大湾区注册地址</label>
+                <input type="text" id="sponsorAddress" class="form-control">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">联系人</label>
+                    <input type="text" id="sponsorContact" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="text" id="sponsorPhone" class="form-control">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeSponsorModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加/编辑赞助权益模态框 -->
+<div id="rightsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeRightsModal()">&times;</span>
+        <h2 id="rightsModalTitle">添加赞助权益</h2>
+        <form id="rightsForm" onsubmit="saveRights(event)">
+            <input type="hidden" id="rightsId">
+            <div class="form-group">
+                <label class="form-label">赞助商 *</label>
+                <select id="rightsSponsor" class="form-control" required>
+                    <option value="">请选择赞助商</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">项目 *</label>
+                <select id="rightsEvent" class="form-control" required>
+                    <option value="">请选择项目</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">权益类型 *</label>
+                    <select id="rightsType" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="冠名">冠名</option>
+                        <option value="广告">广告</option>
+                        <option value="颁奖">颁奖</option>
+                        <option value="物料赞助">物料赞助</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">执行状态 *</label>
+                    <select id="rightsStatus" class="form-control" required>
+                        <option value="未执行">未执行</option>
+                        <option value="已执行">已执行</option>
+                        <option value="部分执行">部分执行</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">曝光次数</label>
+                    <input type="number" id="rightsExposure" class="form-control" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">媒体渠道</label>
+                    <input type="text" id="rightsMedia" class="form-control" placeholder="如：电视、网络等">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeRightsModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加/编辑票务模态框 -->
+<div id="ticketModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeTicketModal()">&times;</span>
+        <h2 id="ticketModalTitle">添加票务</h2>
+        <form id="ticketForm" onsubmit="saveTicket(event)">
+            <input type="hidden" id="ticketId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">观众姓名 *</label>
+                    <input type="text" id="ticketName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">证件号</label>
+                    <input type="text" id="ticketIdCard" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">项目 *</label>
+                <select id="ticketEvent" class="form-control" required>
+                    <option value="">请选择项目</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">座位号</label>
+                    <input type="text" id="ticketSeat" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">票价</label>
+                    <input type="number" id="ticketPrice" class="form-control" step="0.01" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">购票渠道 *</label>
+                    <select id="ticketChannel" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="大湾区线上">大湾区线上</option>
+                        <option value="大湾区线下">大湾区线下</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">核验码</label>
+                    <input type="text" id="ticketCode" class="form-control" placeholder="自动生成或手动输入">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeTicketModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    margin: 3% auto;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 全局数据
+let sponsorsData = [];
+let rightsData = [];
+let ticketsData = [];
+let eventsData = [];
+let currentTab = 'sponsors';
+
+// 标签页切换
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(`${tab}-tab`).classList.add('active');
+    
+    // 加载对应数据
+    if (tab === 'sponsors') {
+        loadSponsors();
+    } else if (tab === 'rights') {
+        loadRights();
+        loadEvents();
+        loadSponsorsForSelect();
+    } else if (tab === 'tickets') {
+        loadTickets();
+        loadEvents();
+    }
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadSponsors();
+    loadEvents();
+    
+    // 设置标签页按钮点击事件
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabMap = {
+                '赞助商管理': 'sponsors',
+                '赞助权益': 'rights',
+                '观众票务': 'tickets'
+            };
+            switchTab(tabMap[this.textContent]);
+        });
+    });
+});
+
+// ==================== 赞助商管理 ====================
+function loadSponsors() {
+    api.get('/api/business/sponsors/')
+        .then(data => {
+            sponsorsData = data.results || data;
+            displaySponsors(sponsorsData);
+        })
+        .catch(err => {
+            console.error('加载赞助商失败:', err);
+            document.querySelector('#sponsorsTable tbody').innerHTML = 
+                '<tr><td colspan="8" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displaySponsors(sponsors) {
+    const tbody = document.querySelector('#sponsorsTable tbody');
+    if (sponsors.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = sponsors.map(sponsor => `
+        <tr>
+            <td>${sponsor.sponsor_name}</td>
+            <td><span class="badge badge-info">${sponsor.sponsor_type}</span></td>
+            <td>${sponsor.sponsor_value}</td>
+            <td>${sponsor.contact_name || '-'}</td>
+            <td>${sponsor.contact_phone || '-'}</td>
+            <td>${sponsor.rights_count || 0}</td>
+            <td>${sponsor.total_exposure || 0}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="viewSponsorRights(${sponsor.id})">权益</button>
+                <button class="btn btn-sm btn-primary" onclick="editSponsor(${sponsor.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSponsor(${sponsor.id})">删除</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterSponsors() {
+    const keyword = document.getElementById('sponsorSearch').value.toLowerCase();
+    const type = document.getElementById('sponsorTypeFilter').value;
+    
+    let filtered = sponsorsData.filter(sponsor => {
+        const matchKeyword = !keyword || 
+            sponsor.sponsor_name.toLowerCase().includes(keyword) ||
+            (sponsor.contact_name && sponsor.contact_name.toLowerCase().includes(keyword)) ||
+            (sponsor.bay_register_address && sponsor.bay_register_address.toLowerCase().includes(keyword));
+        const matchType = !type || sponsor.sponsor_type === type;
+        return matchKeyword && matchType;
+    });
+    
+    displaySponsors(filtered);
+}
+
+function showAddSponsorModal() {
+    document.getElementById('sponsorId').value = '';
+    document.getElementById('sponsorForm').reset();
+    document.getElementById('sponsorModalTitle').textContent = '添加赞助商';
+    document.getElementById('sponsorModal').style.display = 'block';
+}
+
+function editSponsor(id) {
+    const sponsor = sponsorsData.find(s => s.id === id);
+    if (!sponsor) return;
+    
+    document.getElementById('sponsorId').value = sponsor.id;
+    document.getElementById('sponsorName').value = sponsor.sponsor_name;
+    document.getElementById('sponsorType').value = sponsor.sponsor_type;
+    document.getElementById('sponsorValue').value = sponsor.sponsor_value;
+    document.getElementById('sponsorPeriod').value = sponsor.coop_period || '';
+    document.getElementById('sponsorAddress').value = sponsor.bay_register_address || '';
+    document.getElementById('sponsorContact').value = sponsor.contact_name || '';
+    document.getElementById('sponsorPhone').value = sponsor.contact_phone || '';
+    
+    document.getElementById('sponsorModalTitle').textContent = '编辑赞助商';
+    document.getElementById('sponsorModal').style.display = 'block';
+}
+
+function closeSponsorModal() {
+    document.getElementById('sponsorModal').style.display = 'none';
+}
+
+function saveSponsor(e) {
+    e.preventDefault();
+    const id = document.getElementById('sponsorId').value;
+    const data = {
+        sponsor_name: document.getElementById('sponsorName').value.trim(),
+        sponsor_type: document.getElementById('sponsorType').value,
+        sponsor_value: document.getElementById('sponsorValue').value.trim(),
+        coop_period: document.getElementById('sponsorPeriod').value.trim() || null,
+        bay_register_address: document.getElementById('sponsorAddress').value.trim() || null,
+        contact_name: document.getElementById('sponsorContact').value.trim() || null,
+        contact_phone: document.getElementById('sponsorPhone').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/business/sponsors/${id}/`, data)
+        : api.post('/api/business/sponsors/', data);
+    
+    promise.then(() => {
+        closeSponsorModal();
+        loadSponsors();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteSponsor(id) {
+    if (!confirm('确定要删除这个赞助商吗？')) return;
+    
+    api.delete(`/api/business/sponsors/${id}/`)
+        .then(() => {
+            loadSponsors();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function viewSponsorRights(id) {
+    api.get(`/api/business/sponsors/${id}/rights/`)
+        .then(data => {
+            if (data && data.length > 0) {
+                let rightsText = '赞助权益：\n\n';
+                data.forEach(r => {
+                    rightsText += `${r.event_name} - ${r.rights_type} (${r.rights_status})\n`;
+                    rightsText += `曝光次数：${r.exposure_count}\n\n`;
+                });
+                alert(rightsText);
+            } else {
+                alert('该赞助商暂无权益记录');
+            }
+        })
+        .catch(err => {
+            console.error('获取权益失败:', err);
+            alert('获取权益失败');
+        });
+}
+
+// ==================== 赞助权益管理 ====================
+function loadRights() {
+    api.get('/api/business/sponsor-rights/')
+        .then(data => {
+            rightsData = data.results || data;
+            displayRights(rightsData);
+        })
+        .catch(err => {
+            console.error('加载权益失败:', err);
+            document.querySelector('#rightsTable tbody').innerHTML = 
+                '<tr><td colspan="7" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displayRights(rights) {
+    const tbody = document.querySelector('#rightsTable tbody');
+    if (rights.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = rights.map(r => {
+        const statusBadge = r.rights_status === '已执行' 
+            ? '<span class="badge badge-success">已执行</span>'
+            : r.rights_status === '部分执行'
+            ? '<span class="badge badge-warning">部分执行</span>'
+            : '<span class="badge badge-danger">未执行</span>';
+        
+        return `
+        <tr>
+            <td>${r.sponsor_name || '-'}</td>
+            <td>${r.event_name || '-'}</td>
+            <td><span class="badge badge-info">${r.rights_type}</span></td>
+            <td>${statusBadge}</td>
+            <td>${r.exposure_count || 0}</td>
+            <td>${r.bay_media_channel || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-success" onclick="updateExposure(${r.id})">+曝光</button>
+                <button class="btn btn-sm btn-primary" onclick="editRights(${r.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteRights(${r.id})">删除</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function filterRights() {
+    const keyword = document.getElementById('rightsSearch').value.toLowerCase();
+    const type = document.getElementById('rightsTypeFilter').value;
+    const status = document.getElementById('rightsStatusFilter').value;
+    
+    let filtered = rightsData.filter(r => {
+        const matchKeyword = !keyword || 
+            (r.sponsor_name && r.sponsor_name.toLowerCase().includes(keyword)) ||
+            (r.event_name && r.event_name.toLowerCase().includes(keyword)) ||
+            (r.bay_media_channel && r.bay_media_channel.toLowerCase().includes(keyword));
+        const matchType = !type || r.rights_type === type;
+        const matchStatus = !status || r.rights_status === status;
+        return matchKeyword && matchType && matchStatus;
+    });
+    
+    displayRights(filtered);
+}
+
+function loadSponsorsForSelect() {
+    api.get('/api/business/sponsors/')
+        .then(data => {
+            const sponsors = data.results || data;
+            const select = document.getElementById('rightsSponsor');
+            if (select) {
+                select.innerHTML = '<option value="">请选择赞助商</option>' + 
+                    sponsors.map(s => `<option value="${s.id}">${s.sponsor_name}</option>`).join('');
+            }
+        })
+        .catch(err => console.error('加载赞助商失败:', err));
+}
+
+function loadEvents() {
+    api.get('/api/events/events/')
+        .then(data => {
+            eventsData = data.results || data;
+            const select = document.getElementById('rightsEvent');
+            if (select) {
+                select.innerHTML = '<option value="">请选择项目</option>' + 
+                    eventsData.map(e => `<option value="${e.id}">${e.event_name}</option>`).join('');
+            }
+            const ticketSelect = document.getElementById('ticketEvent');
+            if (ticketSelect) {
+                ticketSelect.innerHTML = '<option value="">请选择项目</option>' + 
+                    eventsData.map(e => `<option value="${e.id}">${e.event_name}</option>`).join('');
+            }
+        })
+        .catch(err => console.error('加载事件失败:', err));
+}
+
+function showAddRightsModal() {
+    document.getElementById('rightsId').value = '';
+    document.getElementById('rightsForm').reset();
+    document.getElementById('rightsModalTitle').textContent = '添加赞助权益';
+    loadEvents();
+    loadSponsorsForSelect();
+    document.getElementById('rightsModal').style.display = 'block';
+}
+
+function editRights(id) {
+    const r = rightsData.find(right => right.id === id);
+    if (!r) return;
+    
+    document.getElementById('rightsId').value = r.id;
+    document.getElementById('rightsSponsor').value = r.sponsor_id || '';
+    document.getElementById('rightsEvent').value = r.event_id || '';
+    document.getElementById('rightsType').value = r.rights_type;
+    document.getElementById('rightsStatus').value = r.rights_status;
+    document.getElementById('rightsExposure').value = r.exposure_count || 0;
+    document.getElementById('rightsMedia').value = r.bay_media_channel || '';
+    
+    document.getElementById('rightsModalTitle').textContent = '编辑赞助权益';
+    loadEvents();
+    loadSponsorsForSelect();
+    document.getElementById('rightsModal').style.display = 'block';
+}
+
+function closeRightsModal() {
+    document.getElementById('rightsModal').style.display = 'none';
+}
+
+function saveRights(e) {
+    e.preventDefault();
+    const id = document.getElementById('rightsId').value;
+    const data = {
+        sponsor: parseInt(document.getElementById('rightsSponsor').value),
+        event: parseInt(document.getElementById('rightsEvent').value),
+        rights_type: document.getElementById('rightsType').value,
+        rights_status: document.getElementById('rightsStatus').value,
+        exposure_count: parseInt(document.getElementById('rightsExposure').value) || 0,
+        bay_media_channel: document.getElementById('rightsMedia').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/business/sponsor-rights/${id}/`, data)
+        : api.post('/api/business/sponsor-rights/', data);
+    
+    promise.then(() => {
+        closeRightsModal();
+        loadRights();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteRights(id) {
+    if (!confirm('确定要删除这个权益吗？')) return;
+    
+    api.delete(`/api/business/sponsor-rights/${id}/`)
+        .then(() => {
+            loadRights();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function updateExposure(id) {
+    api.post(`/api/business/sponsor-rights/${id}/update_exposure/`, { increment: 1 })
+        .then(() => {
+            loadRights();
+            alert('曝光次数已更新！');
+        })
+        .catch(err => {
+            console.error('更新失败:', err);
+            alert('更新失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+// ==================== 观众票务管理 ====================
+function loadTickets() {
+    api.get('/api/business/audience-tickets/')
+        .then(data => {
+            ticketsData = data.results || data;
+            displayTickets(ticketsData);
+        })
+        .catch(err => {
+            console.error('加载票务失败:', err);
+            document.querySelector('#ticketsTable tbody').innerHTML = 
+                '<tr><td colspan="9" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displayTickets(tickets) {
+    const tbody = document.querySelector('#ticketsTable tbody');
+    if (tickets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = tickets.map(ticket => {
+        const refundBadge = ticket.refund_status === '已退票' 
+            ? '<span class="badge badge-danger">已退票</span>'
+            : '<span class="badge badge-success">未退票</span>';
+        const confirmBadge = ticket.notice_confirm_status === '已确认'
+            ? '<span class="badge badge-success">已确认</span>'
+            : '<span class="badge badge-warning">未确认</span>';
+        
+        return `
+        <tr>
+            <td>${ticket.audience_name}</td>
+            <td>${ticket.audience_id_card || '-'}</td>
+            <td>${ticket.event_name || '-'}</td>
+            <td>${ticket.seat_no || '-'}</td>
+            <td>${ticket.ticket_price ? '¥' + ticket.ticket_price : '-'}</td>
+            <td>${ticket.purchase_channel}</td>
+            <td>${refundBadge}</td>
+            <td>${confirmBadge}</td>
+            <td>
+                ${ticket.refund_status === '未退票' ? 
+                    `<button class="btn btn-sm btn-warning" onclick="refundTicket(${ticket.id})">退票</button>` : ''}
+                ${ticket.notice_confirm_status === '未确认' ? 
+                    `<button class="btn btn-sm btn-success" onclick="confirmNotice(${ticket.id})">确认</button>` : ''}
+                <button class="btn btn-sm btn-primary" onclick="editTicket(${ticket.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteTicket(${ticket.id})">删除</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function filterTickets() {
+    const keyword = document.getElementById('ticketSearch').value.toLowerCase();
+    const channel = document.getElementById('ticketChannelFilter').value;
+    const refund = document.getElementById('ticketRefundFilter').value;
+    
+    let filtered = ticketsData.filter(ticket => {
+        const matchKeyword = !keyword || 
+            ticket.audience_name.toLowerCase().includes(keyword) ||
+            (ticket.audience_id_card && ticket.audience_id_card.includes(keyword)) ||
+            (ticket.seat_no && ticket.seat_no.toLowerCase().includes(keyword));
+        const matchChannel = !channel || ticket.purchase_channel === channel;
+        const matchRefund = !refund || ticket.refund_status === refund;
+        return matchKeyword && matchChannel && matchRefund;
+    });
+    
+    displayTickets(filtered);
+}
+
+function showAddTicketModal() {
+    document.getElementById('ticketId').value = '';
+    document.getElementById('ticketForm').reset();
+    // 生成随机核验码
+    document.getElementById('ticketCode').value = 'T' + Date.now().toString().slice(-8);
+    document.getElementById('ticketModalTitle').textContent = '添加票务';
+    loadEvents();
+    document.getElementById('ticketModal').style.display = 'block';
+}
+
+function editTicket(id) {
+    const ticket = ticketsData.find(t => t.id === id);
+    if (!ticket) return;
+    
+    document.getElementById('ticketId').value = ticket.id;
+    document.getElementById('ticketName').value = ticket.audience_name;
+    document.getElementById('ticketIdCard').value = ticket.audience_id_card || '';
+    document.getElementById('ticketEvent').value = ticket.event_id || '';
+    document.getElementById('ticketSeat').value = ticket.seat_no || '';
+    document.getElementById('ticketPrice').value = ticket.ticket_price || '';
+    document.getElementById('ticketChannel').value = ticket.purchase_channel;
+    document.getElementById('ticketCode').value = ticket.entry_verification_code || '';
+    
+    document.getElementById('ticketModalTitle').textContent = '编辑票务';
+    loadEvents();
+    document.getElementById('ticketModal').style.display = 'block';
+}
+
+function closeTicketModal() {
+    document.getElementById('ticketModal').style.display = 'none';
+}
+
+function saveTicket(e) {
+    e.preventDefault();
+    const id = document.getElementById('ticketId').value;
+    const data = {
+        audience_name: document.getElementById('ticketName').value.trim(),
+        audience_id_card: document.getElementById('ticketIdCard').value.trim() || null,
+        event: parseInt(document.getElementById('ticketEvent').value),
+        seat_no: document.getElementById('ticketSeat').value.trim() || null,
+        ticket_price: document.getElementById('ticketPrice').value ? parseFloat(document.getElementById('ticketPrice').value) : null,
+        purchase_channel: document.getElementById('ticketChannel').value,
+        entry_verification_code: document.getElementById('ticketCode').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/business/audience-tickets/${id}/`, data)
+        : api.post('/api/business/audience-tickets/', data);
+    
+    promise.then(() => {
+        closeTicketModal();
+        loadTickets();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteTicket(id) {
+    if (!confirm('确定要删除这张票吗？')) return;
+    
+    api.delete(`/api/business/audience-tickets/${id}/`)
+        .then(() => {
+            loadTickets();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function refundTicket(id) {
+    if (!confirm('确定要退票吗？')) return;
+    
+    api.post(`/api/business/audience-tickets/${id}/refund/`)
+        .then(() => {
+            loadTickets();
+            alert('退票成功！');
+        })
+        .catch(err => {
+            console.error('退票失败:', err);
+            alert('退票失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function confirmNotice(id) {
+    api.post(`/api/business/audience-tickets/${id}/confirm_notice/`)
+        .then(() => {
+            loadTickets();
+            alert('确认成功！');
+        })
+        .catch(err => {
+            console.error('确认失败:', err);
+            alert('确认失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function showTicketStatistics() {
+    api.get('/api/business/audience-tickets/statistics/')
+        .then(data => {
+            let statsText = '票务统计：\n\n';
+            statsText += `总票数：${data.total}\n`;
+            statsText += `已售出：${data.sold}\n`;
+            statsText += `已退票：${data.refunded}\n`;
+            statsText += `总收入：¥${data.total_revenue.toFixed(2)}\n\n`;
+            statsText += '按渠道分布：\n';
+            if (data.by_channel && data.by_channel.length > 0) {
+                data.by_channel.forEach(c => {
+                    statsText += `${c.purchase_channel}：${c.count}张\n`;
+                });
+            }
+            alert(statsText);
+        })
+        .catch(err => {
+            console.error('获取统计失败:', err);
+            alert('获取统计失败');
+        });
+}
+</script>
+{% endblock %}
+

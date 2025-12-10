@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}代表队管理 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>代表队管理</h1>
+    <button class="btn btn-primary" onclick="showAddTeamModal()">+ 添加代表队</button>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>代表队列表</h3>
+        <div class="search-box">
+            <input type="text" id="teamSearch" class="form-control" placeholder="搜索代表队..." onkeyup="filterTeams()">
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table" id="teamsTable">
+                <thead>
+                    <tr>
+                        <th>代表队名称</th>
+                        <th>所属城市</th>
+                        <th>领队</th>
+                        <th>联系电话</th>
+                        <th>运动员数</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑代表队模态框 -->
+<div id="teamModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeTeamModal()">&times;</span>
+        <h2 id="modalTitle">添加代表队</h2>
+        <form id="teamForm">
+            <input type="hidden" id="teamId">
+            <div class="form-group">
+                <label class="form-label">代表队名称</label>
+                <input type="text" id="teamName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">所属城市</label>
+                <input type="text" id="teamRegion" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">城市编码</label>
+                <input type="text" id="teamCityCode" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">领队姓名</label>
+                <input type="text" id="leaderName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">领队电话</label>
+                <input type="text" id="leaderPhone" class="form-control" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeTeamModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.search-box {
+    max-width: 300px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let teamsData = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTeams();
+    document.getElementById('teamForm').addEventListener('submit', saveTeam);
+});
+
+function loadTeams() {
+    api.get('/api/basic/teams/')
+        .then(data => {
+            teamsData = data.results || [];
+            displayTeams(teamsData);
+        })
+        .catch(err => {
+            console.error('加载代表队失败:', err);
+            document.querySelector('#teamsTable tbody').innerHTML = 
+                '<tr><td colspan="6" class="empty">加载失败</td></tr>';
+        });
+}
+
+function displayTeams(teams) {
+    const tbody = document.querySelector('#teamsTable tbody');
+    if (teams.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = teams.map(team => {
+        const athleteCount = team.athletes_count || 0;
+        return `
+            <tr>
+                <td>${team.team_name || '-'}</td>
+                <td>${team.region || '-'}</td>
+                <td>${team.leader_name || '-'}</td>
+                <td>${team.leader_phone || '-'}</td>
+                <td>${athleteCount}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="editTeam(${team.id})">编辑</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTeam(${team.id})">删除</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function showAddTeamModal() {
+    document.getElementById('modalTitle').textContent = '添加代表队';
+    document.getElementById('teamForm').reset();
+    document.getElementById('teamId').value = '';
+    document.getElementById('teamModal').style.display = 'block';
+}
+
+function editTeam(id) {
+    const team = teamsData.find(t => t.id === id);
+    if (!team) return;
+    
+    document.getElementById('modalTitle').textContent = '编辑代表队';
+    document.getElementById('teamId').value = team.id;
+    document.getElementById('teamName').value = team.team_name;
+    document.getElementById('teamRegion').value = team.region;
+    document.getElementById('teamCityCode').value = team.city_code;
+    document.getElementById('leaderName').value = team.leader_name;
+    document.getElementById('leaderPhone').value = team.leader_phone;
+    document.getElementById('teamModal').style.display = 'block';
+}
+
+function closeTeamModal() {
+    document.getElementById('teamModal').style.display = 'none';
+}
+
+function saveTeam(e) {
+    e.preventDefault();
+    const id = document.getElementById('teamId').value;
+    
+    // 根据region自动生成team_code和city_code
+    const region = document.getElementById('teamRegion').value;
+    const cityCodeMap = {
+        '广州': '01',
+        '深圳': '02',
+        '香港': '03',
+        '澳门': '04'
+    };
+    const teamCodeMap = {
+        '广州': 'GZ',
+        '深圳': 'SZ',
+        '香港': 'HK',
+        '澳门': 'MO'
+    };
+    
+    const data = {
+        team_name: document.getElementById('teamName').value.trim(),
+        region: region,
+        city_code: document.getElementById('teamCityCode').value || cityCodeMap[region] || '99',
+        leader_name: document.getElementById('leaderName').value.trim(),
+        leader_phone: document.getElementById('leaderPhone').value.trim(),
+        team_code: teamCodeMap[region] || 'OT',
+        sport_type: '综合',
+        is_active: true,
+    };
+    
+    console.log('提交数据:', data);
+    
+    // 显示加载状态
+    const submitBtn = document.querySelector('#teamForm button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '保存中...';
+    
+    const promise = id 
+        ? api.put(`/api/basic/teams/${id}/`, data)
+        : api.post('/api/basic/teams/', data);
+    
+    promise.then(() => {
+        closeTeamModal();
+        loadTeams();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        let errorMsg = '保存失败：\n';
+        if (err.response && err.response.data) {
+            if (typeof err.response.data === 'object') {
+                const errors = [];
+                for (const [field, messages] of Object.entries(err.response.data)) {
+                    if (Array.isArray(messages)) {
+                        errors.push(`${field}: ${messages.join(', ')}`);
+                    } else {
+                        errors.push(`${field}: ${messages}`);
+                    }
+                }
+                errorMsg += errors.join('\n');
+            } else {
+                errorMsg += err.response.data;
+            }
+        } else if (err.message) {
+            errorMsg += err.message;
+        } else {
+            errorMsg += '未知错误';
+        }
+        alert(errorMsg);
+    }).finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    });
+}
+
+function deleteTeam(id) {
+    const team = teamsData.find(t => t.id === id);
+    if (!team) return;
+    
+    const athleteCount = team.athletes_count || 0;
+    let confirmMsg = `确定要删除代表队"${team.team_name}"吗？`;
+    if (athleteCount > 0) {
+        confirmMsg += `\n\n警告：此代表队下有 ${athleteCount} 个运动员，删除代表队会同时删除这些运动员及其相关数据（报名、成绩、奖牌等）！`;
+    }
+    
+    if (!confirm(confirmMsg)) return;
+    
+    api.delete(`/api/basic/teams/${id}/`)
+        .then(() => {
+            loadTeams();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            let errorMsg = '删除失败：\n';
+            if (err.response && err.response.data) {
+                if (typeof err.response.data === 'object') {
+                    errorMsg += JSON.stringify(err.response.data, null, 2);
+                } else {
+                    errorMsg += err.response.data;
+                }
+            } else if (err.message) {
+                errorMsg += err.message;
+            } else {
+                errorMsg += '未知错误';
+            }
+            alert(errorMsg);
+        });
+}
+
+function filterTeams() {
+    const keyword = document.getElementById('teamSearch').value.toLowerCase();
+    const filtered = teamsData.filter(team => 
+        team.team_name.toLowerCase().includes(keyword) ||
+        team.region.toLowerCase().includes(keyword) ||
+        team.leader_name.toLowerCase().includes(keyword)
+    );
+    displayTeams(filtered);
+}
+</script>
+{% endblock %}
+

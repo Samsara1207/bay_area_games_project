@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}数据统计 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>数据统计</h1>
+    <div>
+        <button class="btn btn-primary" onclick="generateCityReport()">生成城市统计</button>
+        <button class="btn btn-primary" onclick="generateEventReport()">生成项目统计</button>
+        <button class="btn btn-primary" onclick="generateTeamReport()">生成代表队统计</button>
+    </div>
+</div>
+
+<div class="dashboard-grid" style="margin-bottom: 2rem;">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>总体统计</h3>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalStats">-</div>
+            <div class="stat-label">总数据量</div>
+        </div>
+    </div>
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>奖牌统计</h3>
+        </div>
+        <div class="card-body">
+            <div class="medal-stats">
+                <div class="medal-item gold">
+                    <span class="medal-icon">🥇</span>
+                    <span class="medal-count" id="totalGold">-</span>
+                </div>
+                <div class="medal-item silver">
+                    <span class="medal-icon">🥈</span>
+                    <span class="medal-count" id="totalSilver">-</span>
+                </div>
+                <div class="medal-item bronze">
+                    <span class="medal-icon">🥉</span>
+                    <span class="medal-count" id="totalBronze">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>破纪录数</h3>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="recordCount">-</div>
+            <div class="stat-label">破纪录总数</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>城市奖牌榜</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table" id="cityMedalTable">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>城市</th>
+                        <th>🥇 金牌</th>
+                        <th>🥈 银牌</th>
+                        <th>🥉 铜牌</th>
+                        <th>总奖牌数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h3>统计报表列表</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table" id="reportsTable">
+                <thead>
+                    <tr>
+                        <th>报表类型</th>
+                        <th>统计维度</th>
+                        <th>统计指标</th>
+                        <th>生成时间</th>
+                        <th>导出状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadStatistics();
+    loadReports();
+    loadCityMedalRanking();
+});
+
+function loadStatistics() {
+    Promise.all([
+        api.get('/api/basic/teams/'),
+        api.get('/api/basic/athletes/'),
+        api.get('/api/events/events/'),
+        api.get('/api/results/medal-honors/'),
+        api.get('/api/results/results/?is_record=是')
+    ]).then(([teams, athletes, events, medals, records]) => {
+        const totalStats = (teams.count || 0) + (athletes.count || 0) + (events.count || 0);
+        document.getElementById('totalStats').textContent = totalStats;
+        
+        const goldCount = (medals.results || []).filter(m => m.medal_type === '金牌').length;
+        const silverCount = (medals.results || []).filter(m => m.medal_type === '银牌').length;
+        const bronzeCount = (medals.results || []).filter(m => m.medal_type === '铜牌').length;
+        
+        document.getElementById('totalGold').textContent = goldCount;
+        document.getElementById('totalSilver').textContent = silverCount;
+        document.getElementById('totalBronze').textContent = bronzeCount;
+        
+        document.getElementById('recordCount').textContent = records.count || 0;
+    }).catch(err => {
+        console.error('加载统计数据失败:', err);
+    });
+}
+
+function loadCityMedalRanking() {
+    Promise.all([
+        api.get('/api/basic/teams/'),
+        api.get('/api/results/medal-honors/?public_status=已公示')
+    ]).then(([teams, medals]) => {
+        const cityMedals = {};
+        
+        // 初始化城市数据
+        (teams.results || []).forEach(team => {
+            if (!cityMedals[team.region]) {
+                cityMedals[team.region] = { gold: 0, silver: 0, bronze: 0, total: 0 };
+            }
+        });
+        
+        // 统计奖牌
+        (medals.results || []).forEach(medal => {
+            const teamName = medal.team_name || medal.team?.team_name;
+            if (teamName) {
+                const team = (teams.results || []).find(t => t.team_name === teamName);
+                if (team && cityMedals[team.region]) {
+                    if (medal.medal_type === '金牌') cityMedals[team.region].gold++;
+                    else if (medal.medal_type === '银牌') cityMedals[team.region].silver++;
+                    else if (medal.medal_type === '铜牌') cityMedals[team.region].bronze++;
+                    cityMedals[team.region].total++;
+                }
+            }
+        });
+        
+        // 排序并显示
+        const sorted = Object.entries(cityMedals)
+            .map(([city, data]) => ({ city, ...data }))
+            .sort((a, b) => {
+                if (b.gold !== a.gold) return b.gold - a.gold;
+                if (b.silver !== a.silver) return b.silver - a.silver;
+                return b.bronze - a.bronze;
+            });
+        
+        displayCityMedalRanking(sorted);
+    }).catch(err => {
+        console.error('加载城市奖牌榜失败:', err);
+    });
+}
+
+function displayCityMedalRanking(rankings) {
+    const tbody = document.querySelector('#cityMedalTable tbody');
+    if (rankings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = rankings.map((item, index) => {
+        const rank = index + 1;
+        const rankBadge = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+        
+        return `
+            <tr>
+                <td><strong>${rankBadge}</strong></td>
+                <td><strong>${item.city}</strong></td>
+                <td>${item.gold}</td>
+                <td>${item.silver}</td>
+                <td>${item.bronze}</td>
+                <td><strong>${item.total}</strong></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function loadReports() {
+    api.get('/api/statistics/data-reports/?ordering=-generate_time')
+        .then(data => {
+            displayReports(data.results || []);
+        })
+        .catch(err => {
+            console.error('加载报表失败:', err);
+            document.querySelector('#reportsTable tbody').innerHTML = 
+                '<tr><td colspan="6" class="empty">加载失败</td></tr>';
+        });
+}
+
+function displayReports(reports) {
+    const tbody = document.querySelector('#reportsTable tbody');
+    if (reports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = reports.map(report => {
+        const generateTime = formatDateTime(report.generate_time);
+        const exportStatus = report.export_status === '已导出' 
+            ? '<span class="badge badge-success">已导出</span>'
+            : '<span class="badge badge-warning">未导出</span>';
+        
+        return `
+            <tr>
+                <td>${report.report_type}</td>
+                <td>${report.stat_dimension}</td>
+                <td>${report.stat_indicator}</td>
+                <td>${generateTime}</td>
+                <td>${exportStatus}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="viewReport(${report.id})">查看详情</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function generateCityReport() {
+    if (!confirm('确定要生成城市统计报表吗？')) return;
+    
+    api.post('/api/statistics/data-reports/generate_city_report/')
+        .then(data => {
+            alert('城市统计报表生成成功！');
+            loadReports();
+            loadStatistics();
+            loadCityMedalRanking();
+        })
+        .catch(err => {
+            alert('生成失败：' + (err.message || '未知错误'));
+        });
+}
+
+function generateEventReport() {
+    if (!confirm('确定要生成项目统计报表吗？')) return;
+    
+    api.post('/api/statistics/data-reports/generate_event_report/')
+        .then(data => {
+            alert('项目统计报表生成成功！');
+            loadReports();
+        })
+        .catch(err => {
+            alert('生成失败：' + (err.message || '未知错误'));
+        });
+}
+
+function generateTeamReport() {
+    if (!confirm('确定要生成代表队统计报表吗？')) return;
+    
+    api.post('/api/statistics/data-reports/generate_team_report/')
+        .then(data => {
+            alert('代表队统计报表生成成功！');
+            loadReports();
+        })
+        .catch(err => {
+            alert('生成失败：' + (err.message || '未知错误'));
+        });
+}
+
+function viewReport(id) {
+    api.get(`/api/statistics/data-reports/${id}/`)
+        .then(data => {
+            const statData = JSON.parse(data.stat_data);
+            const formatted = JSON.stringify(statData, null, 2);
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    <h2>统计详情</h2>
+                    <pre style="background: var(--bg-color); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; max-height: 500px; overflow-y: auto;">${formatted}</pre>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="this.closest('.modal').remove()">关闭</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        })
+        .catch(err => {
+            alert('查看失败：' + (err.message || '未知错误'));
+        });
+}
+</script>
+{% endblock %}
+

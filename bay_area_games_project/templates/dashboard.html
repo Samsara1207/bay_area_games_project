@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block title %}仪表盘 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>仪表盘</h1>
+    <p class="subtitle">实时监控赛事数据和运营状态</p>
+</div>
+
+<div class="dashboard-grid">
+    <!-- 今日概览 -->
+    <div class="dashboard-card stat-card-large">
+        <div class="card-header">
+            <h3>今日概览</h3>
+        </div>
+        <div class="card-body">
+            <div class="stat-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="todayEvents">-</div>
+                    <div class="stat-label">今日比赛</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="todayMedals">-</div>
+                    <div class="stat-label">今日奖牌</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="todayRecords">-</div>
+                    <div class="stat-label">破纪录数</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 基础信息模块 -->
+    <a href="{% url 'teams' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>代表队统计</h3>
+            <span class="card-icon">🏃</span>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalTeams">-</div>
+            <div class="stat-label">总代表队数</div>
+        </div>
+    </a>
+
+    <a href="{% url 'athletes' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>运动员统计</h3>
+            <span class="card-icon">👤</span>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalAthletes">-</div>
+            <div class="stat-label">总运动员数</div>
+            <div class="stat-sub" id="qualifiedAthletes">已审核: -</div>
+        </div>
+    </a>
+
+    <a href="{% url 'events' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>赛事项目</h3>
+            <span class="card-icon">🏆</span>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalEvents">-</div>
+            <div class="stat-label">总项目数</div>
+        </div>
+    </a>
+
+    <!-- 奖牌榜 -->
+    <a href="{% url 'results' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>奖牌榜</h3>
+            <span class="card-icon">🥇</span>
+        </div>
+        <div class="card-body">
+            <div class="medal-stats">
+                <div class="medal-item gold">
+                    <span class="medal-icon">🥇</span>
+                    <span class="medal-count" id="goldCount">-</span>
+                </div>
+                <div class="medal-item silver">
+                    <span class="medal-icon">🥈</span>
+                    <span class="medal-count" id="silverCount">-</span>
+                </div>
+                <div class="medal-item bronze">
+                    <span class="medal-icon">🥉</span>
+                    <span class="medal-count" id="bronzeCount">-</span>
+                </div>
+            </div>
+        </div>
+    </a>
+
+    <!-- 裁判模块 -->
+    <a href="{% url 'referees' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>裁判管理</h3>
+            <span class="card-icon">⚖️</span>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalReferees">-</div>
+            <div class="stat-label">总裁判数</div>
+            <div class="stat-sub" id="todayArrangements">今日安排: -</div>
+        </div>
+    </a>
+
+    <!-- 商务模块 -->
+    <a href="{% url 'sponsors' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>商务合作</h3>
+            <span class="card-icon">💼</span>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalSponsors">-</div>
+            <div class="stat-label">赞助商数</div>
+            <div class="stat-sub" id="totalTickets">已售票: -</div>
+        </div>
+    </a>
+
+    <!-- 后勤模块 -->
+    <a href="{% url 'logistics' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>后勤保障</h3>
+            <span class="card-icon">🚌</span>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalVolunteers">-</div>
+            <div class="stat-label">志愿者数</div>
+            <div class="stat-sub" id="totalSuppliers">供应商: -</div>
+        </div>
+    </a>
+
+    <!-- 成绩统计 -->
+    <a href="{% url 'results' %}" class="dashboard-card clickable-card">
+        <div class="card-header">
+            <h3>成绩统计</h3>
+            <span class="card-icon">📊</span>
+        </div>
+        <div class="card-body">
+            <div class="stat-value" id="totalResults">-</div>
+            <div class="stat-label">总成绩数</div>
+            <div class="stat-sub" id="recordCount">破纪录: -</div>
+        </div>
+    </a>
+</div>
+
+<div class="dashboard-section">
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>最近成绩</h3>
+            <a href="{% url 'results' %}" class="btn-link">查看全部 →</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="recentResults">
+                    <thead>
+                        <tr>
+                            <th>项目</th>
+                            <th>运动员</th>
+                            <th>成绩</th>
+                            <th>排名</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-card {
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+}
+
+.dashboard-card.stat-card-large {
+    grid-column: span 2;
+}
+
+.clickable-card {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+}
+
+.clickable-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.clickable-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.clickable-card .card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.card-icon {
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.stat-sub {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item .stat-value {
+    font-size: 2rem;
+}
+
+.medal-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.medal-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.medal-icon {
+    font-size: 2rem;
+}
+
+.medal-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.medal-item.gold .medal-count {
+    color: #f59e0b;
+}
+
+.medal-item.silver .medal-count {
+    color: #6b7280;
+}
+
+.medal-item.bronze .medal-count {
+    color: #d97706;
+}
+
+.dashboard-section {
+    margin-top: 2rem;
+}
+
+.btn-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.btn-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .dashboard-card.stat-card-large {
+        grid-column: span 1;
+    }
+    
+    .stat-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+    // 每30秒刷新一次
+    setInterval(loadDashboardData, 30000);
+});
+
+function loadDashboardData() {
+    // 加载统计数据
+    Promise.all([
+        api.get('/api/basic/teams/'),
+        api.get('/api/basic/athletes/'),
+        api.get('/api/events/events/'),
+        api.get('/api/results/medal-honors/'),
+        api.get('/api/results/results/'),
+        api.get('/api/referees/referees/'),
+        api.get('/api/referees/referee-arrangements/today/'),
+        api.get('/api/business/sponsors/'),
+        api.get('/api/business/audience-tickets/statistics/'),
+        api.get('/api/logistics/volunteers/'),
+        api.get('/api/logistics/suppliers/'),
+        api.get('/api/results/results/?ordering=-create_time&page_size=5')
+    ]).then(([teams, athletes, events, medals, results, referees, arrangements, sponsors, tickets, volunteers, suppliers, recentResults]) => {
+        // 基础信息
+        document.getElementById('totalTeams').textContent = teams.count || teams.length || 0;
+        document.getElementById('totalAthletes').textContent = athletes.count || athletes.length || 0;
+        const qualifiedCount = Array.isArray(athletes) 
+            ? athletes.filter(a => a.qualification_status === '已审核').length
+            : 0;
+        document.getElementById('qualifiedAthletes').textContent = `已审核: ${qualifiedCount}`;
+        
+        // 赛事
+        document.getElementById('totalEvents').textContent = events.count || events.length || 0;
+        
+        // 奖牌统计
+        const medalsList = medals.results || medals;
+        const goldCount = medalsList.filter(m => m.medal_type === '金牌').length;
+        const silverCount = medalsList.filter(m => m.medal_type === '银牌').length;
+        const bronzeCount = medalsList.filter(m => m.medal_type === '铜牌').length;
+        
+        document.getElementById('goldCount').textContent = goldCount;
+        document.getElementById('silverCount').textContent = silverCount;
+        document.getElementById('bronzeCount').textContent = bronzeCount;
+        
+        // 今日概览
+        const today = new Date().toISOString().split('T')[0];
+        const todayEvents = Array.isArray(events) 
+            ? events.filter(e => e.event_time && e.event_time.startsWith(today)).length
+            : 0;
+        document.getElementById('todayEvents').textContent = todayEvents;
+        
+        // 今日奖牌（简化处理，实际应该按日期过滤）
+        document.getElementById('todayMedals').textContent = goldCount + silverCount + bronzeCount;
+        
+        // 破纪录数
+        const resultsList = results.results || results;
+        const recordCount = resultsList.filter(r => r.is_record === '是').length;
+        document.getElementById('todayRecords').textContent = recordCount;
+        document.getElementById('recordCount').textContent = `破纪录: ${recordCount}`;
+        
+        // 成绩统计
+        document.getElementById('totalResults').textContent = resultsList.length;
+        
+        // 裁判统计
+        const refereesList = referees.results || referees;
+        document.getElementById('totalReferees').textContent = refereesList.length;
+        const arrangementsList = Array.isArray(arrangements) ? arrangements : [];
+        document.getElementById('todayArrangements').textContent = `今日安排: ${arrangementsList.length}`;
+        
+        // 商务统计
+        const sponsorsList = sponsors.results || sponsors;
+        document.getElementById('totalSponsors').textContent = sponsorsList.length;
+        document.getElementById('totalTickets').textContent = `已售票: ${tickets.sold || 0}`;
+        
+        // 后勤统计
+        const volunteersList = volunteers.results || volunteers;
+        document.getElementById('totalVolunteers').textContent = volunteersList.length;
+        const suppliersList = suppliers.results || suppliers;
+        document.getElementById('totalSuppliers').textContent = `供应商: ${suppliersList.length}`;
+        
+        // 显示最近成绩
+        displayRecentResults(recentResults.results || recentResults);
+    }).catch(err => {
+        console.error('加载仪表盘数据失败:', err);
+        // 显示错误信息
+        document.querySelectorAll('.stat-value').forEach(el => {
+            if (el.textContent === '-') {
+                el.textContent = '错误';
+            }
+        });
+    });
+}
+
+function displayRecentResults(results) {
+    const tbody = document.querySelector('#recentResults tbody');
+    if (!results || results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = results.map(result => {
+        const athleteName = result.apply?.athlete?.name || result.athlete_name || '-';
+        const eventName = result.apply?.event?.event_name || result.event_name || '-';
+        const ranking = result.ranking ? `第${result.ranking}名` : '-';
+        const recordBadge = result.is_record === '是' ? '<span class="badge badge-warning">破纪录</span>' : '';
+        
+        return `
+            <tr>
+                <td>${eventName}</td>
+                <td>${athleteName}</td>
+                <td>${result.result_value || '-'}</td>
+                <td>${ranking}</td>
+                <td>${recordBadge}</td>
+            </tr>
+        `;
+    }).join('');
+}
+</script>
+{% endblock %}
+

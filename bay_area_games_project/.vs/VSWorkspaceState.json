@@ -1,0 +1,10 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\basic_info",
+    "\\basic_info\\management",
+    "\\basic_info\\management\\commands"
+  ],
+  "SelectedNode": "\\basic_info\\management\\__init__.py",
+  "PreviewInSolutionExplorer": false
+}

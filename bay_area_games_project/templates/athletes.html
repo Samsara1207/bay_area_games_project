@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+
+{% block title %}运动员管理 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>运动员管理</h1>
+    <button class="btn btn-primary" onclick="showAddAthleteModal()">+ 添加运动员</button>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>运动员列表</h3>
+        <div class="search-box">
+            <input type="text" id="athleteSearch" class="form-control" placeholder="搜索运动员..." onkeyup="filterAthletes()">
+            <select id="qualificationFilter" class="form-control" onchange="filterAthletes()" style="margin-left: 10px; max-width: 200px;">
+                <option value="">全部状态</option>
+                <option value="已审核">已审核</option>
+                <option value="未审核">未审核</option>
+                <option value="驳回">驳回</option>
+            </select>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table" id="athletesTable">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>所属代表队</th>
+                        <th>资格状态</th>
+                        <th>兴奋剂检测</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 添加运动员模态框 -->
+<div id="athleteModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAthleteModal()">&times;</span>
+        <h2 id="modalTitle">添加运动员</h2>
+        <form id="athleteForm" onsubmit="saveAthlete(event)">
+            <input type="hidden" id="athleteId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">姓名 *</label>
+                    <input type="text" id="athleteName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">性别 *</label>
+                    <select id="athleteGender" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">出生日期 *</label>
+                    <input type="date" id="athleteBirthDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">证件号</label>
+                    <input type="text" id="athleteIdCard" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">大湾区户籍 *</label>
+                    <select id="athleteHukou" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="广东">广东</option>
+                        <option value="香港">香港</option>
+                        <option value="澳门">澳门</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">所属代表队 *</label>
+                    <select id="athleteTeam" class="form-control" required>
+                        <option value="">请选择代表队</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">身高(米)</label>
+                    <input type="number" id="athleteHeight" class="form-control" step="0.01" min="0" max="3">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">体重(公斤)</label>
+                    <input type="number" id="athleteWeight" class="form-control" step="0.1" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="text" id="athletePhone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">兴奋剂检测 *</label>
+                    <select id="dopingTest" class="form-control" required>
+                        <option value="待检测">待检测</option>
+                        <option value="合格">合格</option>
+                        <option value="不合格">不合格</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">紧急联系人</label>
+                    <input type="text" id="emergencyContact" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">紧急联系电话</label>
+                    <input type="text" id="emergencyPhone" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">健康状况</label>
+                <input type="text" id="healthStatus" class="form-control" placeholder="如：健康">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">服装尺码</label>
+                    <input type="text" id="clothingSize" class="form-control" placeholder="如：XL">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">保险信息</label>
+                    <input type="text" id="insuranceInfo" class="form-control">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeAthleteModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    margin: 3% auto;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 700px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let athletesData = [];
+let teamsData = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTeams();
+    loadAthletes();
+});
+
+function loadTeams() {
+    api.get('/api/basic/teams/')
+        .then(data => {
+            teamsData = data.results || [];
+            populateTeamSelect();
+        })
+        .catch(err => console.error('加载代表队失败:', err));
+}
+
+function populateTeamSelect() {
+    const select = document.getElementById('athleteTeam');
+    select.innerHTML = '<option value="">请选择代表队</option>';
+    teamsData.forEach(team => {
+        const option = document.createElement('option');
+        option.value = team.id;
+        option.textContent = team.team_name;
+        select.appendChild(option);
+    });
+}
+
+function loadAthletes() {
+    api.get('/api/basic/athletes/')
+        .then(data => {
+            athletesData = data.results || [];
+            displayAthletes(athletesData);
+        })
+        .catch(err => {
+            console.error('加载运动员失败:', err);
+            document.querySelector('#athletesTable tbody').innerHTML = 
+                '<tr><td colspan="6" class="empty">加载失败</td></tr>';
+        });
+}
+
+function displayAthletes(athletes) {
+    const tbody = document.querySelector('#athletesTable tbody');
+    if (athletes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = athletes.map(athlete => {
+        const teamName = athlete.team_name || athlete.team?.team_name || '-';
+        const statusClass = {
+            '已审核': 'badge-success',
+            '未审核': 'badge-warning',
+            '驳回': 'badge-danger'
+        }[athlete.qualification_status] || '';
+        
+        return `
+            <tr>
+                <td>${athlete.name}</td>
+                <td>${athlete.gender}</td>
+                <td>${teamName}</td>
+                <td><span class="badge ${statusClass}">${athlete.qualification_status}</span></td>
+                <td>${athlete.doping_test}</td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="qualifyAthlete(${athlete.id})" 
+                        ${athlete.qualification_status === '已审核' ? 'disabled' : ''}>审核通过</button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectAthlete(${athlete.id})"
+                        ${athlete.qualification_status === '驳回' ? 'disabled' : ''}>驳回</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function qualifyAthlete(id) {
+    api.post(`/api/basic/athletes/${id}/auto_qualify/`)
+        .then(() => {
+            alert('审核通过！');
+            loadAthletes();
+        })
+        .catch(err => {
+            alert('操作失败：' + (err.message || '未知错误'));
+        });
+}
+
+function rejectAthlete(id) {
+    const reason = prompt('请输入驳回原因：');
+    if (reason === null) return;
+    
+    api.post(`/api/basic/athletes/${id}/reject/`, { reason })
+        .then(() => {
+            alert('已驳回');
+            loadAthletes();
+        })
+        .catch(err => {
+            alert('操作失败：' + (err.message || '未知错误'));
+        });
+}
+
+function filterAthletes() {
+    const keyword = document.getElementById('athleteSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('qualificationFilter').value;
+    
+    let filtered = athletesData.filter(athlete => {
+        const matchKeyword = !keyword || 
+            athlete.name.toLowerCase().includes(keyword) ||
+            (athlete.team_name || athlete.team?.team_name || '').toLowerCase().includes(keyword);
+        const matchStatus = !statusFilter || athlete.qualification_status === statusFilter;
+        return matchKeyword && matchStatus;
+    });
+    
+    displayAthletes(filtered);
+}
+
+function showAddAthleteModal() {
+    const modal = document.getElementById('athleteModal');
+    if (!modal) {
+        console.error('模态框元素未找到');
+        alert('页面加载错误，请刷新页面重试');
+        return;
+    }
+    
+    document.getElementById('modalTitle').textContent = '添加运动员';
+    document.getElementById('athleteForm').reset();
+    document.getElementById('athleteId').value = '';
+    modal.style.display = 'block';
+    
+    // 确保代表队下拉框已填充
+    if (teamsData.length > 0) {
+        populateTeamSelect();
+    }
+}
+
+function closeAthleteModal() {
+    const modal = document.getElementById('athleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// 点击模态框外部关闭
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('athleteModal');
+    if (modal && event.target === modal) {
+        closeAthleteModal();
+    }
+});
+
+function saveAthlete(e) {
+    e.preventDefault();
+    const id = document.getElementById('athleteId').value;
+    
+    // 验证必填字段
+    const teamId = document.getElementById('athleteTeam').value;
+    if (!teamId) {
+        alert('请选择所属代表队！');
+        return;
+    }
+    
+    const formData = {
+        name: document.getElementById('athleteName').value.trim(),
+        gender: document.getElementById('athleteGender').value,
+        birth_date: document.getElementById('athleteBirthDate').value,
+        bay_area_hukou: document.getElementById('athleteHukou').value,
+        doping_test: document.getElementById('dopingTest').value,
+        team: parseInt(teamId),
+        id_card: document.getElementById('athleteIdCard').value.trim() || '',  // 确保有值，即使是空字符串
+    };
+    
+    const height = document.getElementById('athleteHeight').value;
+    if (height) formData.height = parseFloat(height);
+    
+    const weight = document.getElementById('athleteWeight').value;
+    if (weight) formData.weight = parseFloat(weight);
+    
+    const phone = document.getElementById('athletePhone').value.trim();
+    if (phone) formData.phone = phone;
+    
+    const emergencyContact = document.getElementById('emergencyContact').value.trim();
+    if (emergencyContact) formData.emergency_contact = emergencyContact;
+    
+    const emergencyPhone = document.getElementById('emergencyPhone').value.trim();
+    if (emergencyPhone) formData.emergency_phone = emergencyPhone;
+    
+    const healthStatus = document.getElementById('healthStatus').value.trim();
+    if (healthStatus) formData.health_status = healthStatus;
+    
+    const clothingSize = document.getElementById('clothingSize').value.trim();
+    if (clothingSize) formData.clothing_size = clothingSize;
+    
+    const insuranceInfo = document.getElementById('insuranceInfo').value.trim();
+    if (insuranceInfo) formData.insurance_info = insuranceInfo;
+    
+    console.log('提交数据:', formData);
+    
+    // 显示加载状态
+    const submitBtn = document.querySelector('#athleteForm button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '保存中...';
+    
+    const promise = id 
+        ? api.put(`/api/basic/athletes/${id}/`, formData)
+        : api.post('/api/basic/athletes/', formData);
+    
+    promise.then(() => {
+        closeAthleteModal();
+        loadAthletes();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        let errorMsg = '保存失败：\n';
+        
+        // 尝试解析错误详情
+        if (err.response) {
+            const response = err.response;
+            if (response.data) {
+                if (typeof response.data === 'object') {
+                    // 处理Django REST Framework的验证错误
+                    const errors = [];
+                    for (const [field, messages] of Object.entries(response.data)) {
+                        if (Array.isArray(messages)) {
+                            errors.push(`${field}: ${messages.join(', ')}`);
+                        } else {
+                            errors.push(`${field}: ${messages}`);
+                        }
+                    }
+                    errorMsg += errors.join('\n');
+                } else {
+                    errorMsg += response.data;
+                }
+            } else {
+                errorMsg += `HTTP ${response.status}`;
+            }
+        } else if (err.message) {
+            errorMsg += err.message;
+        } else if (typeof err === 'object') {
+            errorMsg += JSON.stringify(err, null, 2);
+        } else {
+            errorMsg += String(err);
+        }
+        
+        alert(errorMsg);
+    }).finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    });
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}大湾区运动会管理系统{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><i class="fas fa-trophy"></i> 大湾区运动会</h1>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="切换菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{% url 'index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}"><i class="fas fa-home nav-icon"></i> 首页</a></li>
+                <li><a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="fas fa-chart-line nav-icon"></i> 仪表盘</a></li>
+                
+                <li class="nav-dropdown">
+                    <a href="#" class="nav-dropdown-toggle"><i class="fas fa-users nav-icon"></i> 基础信息 <i class="fas fa-chevron-down dropdown-arrow"></i></a>
+                    <ul class="nav-dropdown-menu">
+                        <li><a href="{% url 'teams' %}" class="{% if request.resolver_match.url_name == 'teams' %}active{% endif %}"><i class="fas fa-users-cog menu-icon"></i> 代表队</a></li>
+                        <li><a href="{% url 'athletes' %}" class="{% if request.resolver_match.url_name == 'athletes' %}active{% endif %}"><i class="fas fa-user-friends menu-icon"></i> 运动员</a></li>
+                    </ul>
+                </li>
+                
+                <li class="nav-dropdown">
+                    <a href="#" class="nav-dropdown-toggle"><i class="fas fa-trophy nav-icon"></i> 赛事管理 <i class="fas fa-chevron-down dropdown-arrow"></i></a>
+                    <ul class="nav-dropdown-menu">
+                        <li><a href="{% url 'events' %}" class="{% if request.resolver_match.url_name == 'events' %}active{% endif %}"><i class="fas fa-calendar-alt menu-icon"></i> 赛事项目</a></li>
+                        <li><a href="{% url 'referees' %}" class="{% if request.resolver_match.url_name == 'referees' %}active{% endif %}"><i class="fas fa-gavel menu-icon"></i> 裁判管理</a></li>
+                        <li><a href="{% url 'results' %}" class="{% if request.resolver_match.url_name == 'results' %}active{% endif %}"><i class="fas fa-medal menu-icon"></i> 成绩管理</a></li>
+                    </ul>
+                </li>
+                
+                <li class="nav-dropdown">
+                    <a href="#" class="nav-dropdown-toggle"><i class="fas fa-briefcase nav-icon"></i> 运营管理 <i class="fas fa-chevron-down dropdown-arrow"></i></a>
+                    <ul class="nav-dropdown-menu">
+                        <li><a href="{% url 'sponsors' %}" class="{% if request.resolver_match.url_name == 'sponsors' %}active{% endif %}"><i class="fas fa-handshake menu-icon"></i> 商务合作</a></li>
+                        <li><a href="{% url 'logistics' %}" class="{% if request.resolver_match.url_name == 'logistics' %}active{% endif %}"><i class="fas fa-truck menu-icon"></i> 后勤保障</a></li>
+                    </ul>
+                </li>
+                
+                <li><a href="{% url 'statistics' %}" class="{% if request.resolver_match.url_name == 'statistics' %}active{% endif %}"><i class="fas fa-chart-bar nav-icon"></i> 数据统计</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 大湾区运动会管理系统. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script>
+        // 导航菜单和下拉菜单控制
+        document.addEventListener('DOMContentLoaded', function() {
+            const navToggle = document.getElementById('navToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (navToggle && navMenu) {
+                // 移动端菜单切换
+                navToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    navMenu.classList.toggle('active');
+                    navToggle.classList.toggle('active');
+                });
+                
+                // 下拉菜单控制（桌面端和移动端）
+                const dropdownToggles = document.querySelectorAll('.nav-dropdown-toggle');
+                const dropdowns = document.querySelectorAll('.nav-dropdown');
+                
+                dropdownToggles.forEach(toggle => {
+                    toggle.addEventListener('click', function(e) {
+                        const dropdown = this.closest('.nav-dropdown');
+                        const isMobile = window.innerWidth <= 768;
+                        
+                        if (isMobile) {
+                            // 移动端：切换下拉菜单
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // 关闭其他下拉菜单
+                            dropdowns.forEach(d => {
+                                if (d !== dropdown) {
+                                    d.classList.remove('active');
+                                }
+                            });
+                            
+                            dropdown.classList.toggle('active');
+                        } else {
+                            // 桌面端：阻止默认行为，保持悬停效果
+                            e.preventDefault();
+                        }
+                    });
+                });
+                
+                // 点击外部关闭菜单
+                document.addEventListener('click', function(e) {
+                    const isMobile = window.innerWidth <= 768;
+                    const clickedInsideNav = navMenu.contains(e.target);
+                    const clickedToggle = navToggle.contains(e.target);
+                    
+                    if (isMobile) {
+                        // 移动端：点击外部关闭所有菜单
+                        if (!clickedInsideNav && !clickedToggle) {
+                            navMenu.classList.remove('active');
+                            navToggle.classList.remove('active');
+                            dropdowns.forEach(dropdown => {
+                                dropdown.classList.remove('active');
+                            });
+                        }
+                    } else {
+                        // 桌面端：点击外部关闭下拉菜单
+                        if (!clickedInsideNav) {
+                            dropdowns.forEach(dropdown => {
+                                dropdown.classList.remove('active');
+                            });
+                        }
+                    }
+                });
+                
+                // 窗口大小改变时重置菜单状态
+                let resizeTimer;
+                window.addEventListener('resize', function() {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(function() {
+                        if (window.innerWidth > 768) {
+                            navMenu.classList.remove('active');
+                            navToggle.classList.remove('active');
+                            dropdowns.forEach(dropdown => {
+                                dropdown.classList.remove('active');
+                            });
+                        }
+                    }, 250);
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

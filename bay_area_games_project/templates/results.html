@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}成绩管理 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>成绩管理</h1>
+    <div>
+        <button class="btn btn-primary" onclick="calculateRanking()">计算排名</button>
+        <button class="btn btn-success" onclick="autoAwardMedals()">自动颁发奖牌</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>成绩列表</h3>
+        <div class="search-box">
+            <input type="text" id="resultSearch" class="form-control" placeholder="搜索成绩..." onkeyup="filterResults()">
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>项目</th>
+                        <th>运动员</th>
+                        <th>成绩</th>
+                        <th>排名</th>
+                        <th>轮次</th>
+                        <th>破纪录</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h3>奖牌列表</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="data-table" id="medalsTable">
+                <thead>
+                    <tr>
+                        <th>奖牌类型</th>
+                        <th>运动员</th>
+                        <th>代表队</th>
+                        <th>项目</th>
+                        <th>颁发时间</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="loading">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-row {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    color: var(--text-primary);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let resultsData = [];
+let medalsData = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadResults();
+    loadMedals();
+});
+
+function loadResults() {
+    api.get('/api/results/results/?ordering=-create_time')
+        .then(data => {
+            resultsData = data.results || [];
+            displayResults(resultsData);
+        })
+        .catch(err => {
+            console.error('加载成绩失败:', err);
+            document.querySelector('#resultsTable tbody').innerHTML = 
+                '<tr><td colspan="7" class="empty">加载失败</td></tr>';
+        });
+}
+
+function loadMedals() {
+    api.get('/api/results/medal-honors/?ordering=-award_time')
+        .then(data => {
+            medalsData = data.results || [];
+            displayMedals(medalsData);
+        })
+        .catch(err => {
+            console.error('加载奖牌失败:', err);
+            document.querySelector('#medalsTable tbody').innerHTML = 
+                '<tr><td colspan="6" class="empty">加载失败</td></tr>';
+        });
+}
+
+function displayResults(results) {
+    const tbody = document.querySelector('#resultsTable tbody');
+    if (results.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = results.map(result => {
+        const athleteName = result.athlete_name || result.apply?.athlete?.name || '-';
+        const eventName = result.event_name || result.apply?.event?.event_name || '-';
+        const teamName = result.team_name || result.apply?.athlete?.team?.team_name || '-';
+        const ranking = result.ranking ? `第${result.ranking}名` : '-';
+        const recordBadge = result.is_record === '是' 
+            ? '<span class="badge badge-warning">破纪录</span>' 
+            : '-';
+        
+        return `
+            <tr>
+                <td>${eventName}</td>
+                <td>
+                    <div><strong>${athleteName}</strong></div>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary);">${teamName}</div>
+                </td>
+                <td><strong style="font-size: 1.1rem; color: var(--primary-color);">${result.result_value}</strong></td>
+                <td>${ranking}</td>
+                <td>${result.round || '-'}</td>
+                <td>${recordBadge}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="viewResult(${result.id})">查看</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function displayMedals(medals) {
+    const tbody = document.querySelector('#medalsTable tbody');
+    if (medals.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = medals.map(medal => {
+        const athleteName = medal.athlete_name || medal.athlete?.name || '-';
+        const teamName = medal.team_name || medal.team?.team_name || '-';
+        const eventName = medal.event_name || medal.result?.apply?.event?.event_name || '-';
+        const awardTime = medal.award_time ? formatDateTime(medal.award_time) : '-';
+        const statusBadge = medal.public_status === '已公示' 
+            ? '<span class="badge badge-success">已公示</span>'
+            : '<span class="badge badge-warning">未公示</span>';
+        
+        const medalIcon = {
+            '金牌': '🥇',
+            '银牌': '🥈',
+            '铜牌': '🥉'
+        }[medal.medal_type] || '🏅';
+        
+        return `
+            <tr>
+                <td><strong style="font-size: 1.2rem;">${medalIcon}</strong> ${medal.medal_type}</td>
+                <td><strong>${athleteName}</strong></td>
+                <td>${teamName}</td>
+                <td>${eventName}</td>
+                <td>${awardTime}</td>
+                <td>${statusBadge}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function calculateRanking() {
+    const eventId = prompt('请输入项目ID：');
+    if (!eventId) return;
+    
+    api.post('/api/results/results/calculate_ranking/', { event_id: parseInt(eventId) })
+        .then(() => {
+            alert('排名计算完成！');
+            loadResults();
+        })
+        .catch(err => {
+            alert('计算失败：' + (err.message || '未知错误'));
+        });
+}
+
+function autoAwardMedals() {
+    const eventId = prompt('请输入项目ID：');
+    if (!eventId) return;
+    
+    api.post('/api/results/results/auto_award_medals/', { event_id: parseInt(eventId) })
+        .then(() => {
+            alert('奖牌颁发完成！');
+            loadMedals();
+        })
+        .catch(err => {
+            alert('颁发失败：' + (err.message || '未知错误'));
+        });
+}
+
+function filterResults() {
+    const keyword = document.getElementById('resultSearch').value.toLowerCase();
+    const filtered = resultsData.filter(result => {
+        const athleteName = result.apply?.athlete?.name || '';
+        const eventName = result.apply?.event?.event_name || '';
+        return athleteName.toLowerCase().includes(keyword) || 
+               eventName.toLowerCase().includes(keyword) ||
+               result.result_value.toLowerCase().includes(keyword);
+    });
+    displayResults(filtered);
+}
+
+function viewResult(id) {
+    api.get(`/api/results/results/${id}/`)
+        .then(data => {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 700px;">
+                    <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    <h2>成绩详情</h2>
+                    <div style="margin-top: 1.5rem;">
+                        <div class="detail-row">
+                            <div class="detail-label">项目名称：</div>
+                            <div class="detail-value">${data.event_name || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">运动员：</div>
+                            <div class="detail-value">${data.athlete_name || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">代表队：</div>
+                            <div class="detail-value">${data.team_name || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">成绩值：</div>
+                            <div class="detail-value"><strong style="font-size: 1.2rem; color: var(--primary-color);">${data.result_value || '-'}</strong></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">排名：</div>
+                            <div class="detail-value">${data.ranking ? `第${data.ranking}名` : '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">轮次：</div>
+                            <div class="detail-value">${data.round || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">是否破纪录：</div>
+                            <div class="detail-value">${data.is_record === '是' ? '<span class="badge badge-warning">是</span>' : '否'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">破纪录认证：</div>
+                            <div class="detail-value">${data.record_cert_status || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">风速：</div>
+                            <div class="detail-value">${data.wind_speed ? data.wind_speed + ' m/s' : '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">得分：</div>
+                            <div class="detail-value">${data.score || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">积分值：</div>
+                            <div class="detail-value">${data.score_value || '-'}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">裁判打分：</div>
+                            <div class="detail-value">${data.referee_scores || '-'}</div>
+                        </div>
+                        ${data.video_url ? `
+                        <div class="detail-row">
+                            <div class="detail-label">视频回放：</div>
+                            <div class="detail-value"><a href="${data.video_url}" target="_blank">查看视频</a></div>
+                        </div>
+                        ` : ''}
+                        <div class="detail-row">
+                            <div class="detail-label">创建时间：</div>
+                            <div class="detail-value">${formatDateTime(data.create_time)}</div>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="this.closest('.modal').remove()">关闭</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        })
+        .catch(err => {
+            alert('查看失败：' + (err.message || '未知错误'));
+        });
+}
+</script>
+{% endblock %}
+

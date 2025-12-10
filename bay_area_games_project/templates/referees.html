@@ -1,0 +1,999 @@
+{% extends "base.html" %}
+
+{% block title %}裁判管理 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>裁判管理</h1>
+</div>
+
+<!-- 标签页导航 -->
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('referees')">裁判管理</button>
+    <button class="tab-btn" onclick="switchTab('groups')">裁判组管理</button>
+    <button class="tab-btn" onclick="switchTab('arrangements')">执裁安排</button>
+</div>
+
+<!-- 裁判管理标签页 -->
+<div id="referees-tab" class="tab-content active">
+    <div class="card">
+        <div class="card-header">
+            <h3>裁判列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="search-box">
+                    <input type="text" id="refereeSearch" class="form-control" placeholder="搜索裁判..." onkeyup="filterReferees()">
+                </div>
+                <select id="refereeLevelFilter" class="form-control" onchange="filterReferees()" style="max-width: 150px;">
+                    <option value="">全部等级</option>
+                    <option value="国家级">国家级</option>
+                    <option value="省级">省级</option>
+                    <option value="大湾区认证">大湾区认证</option>
+                </select>
+                <button class="btn btn-primary" onclick="showAddRefereeModal()">+ 添加裁判</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="refereesTable">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>裁判等级</th>
+                            <th>负责项目</th>
+                            <th>联系电话</th>
+                            <th>湾区认证</th>
+                            <th>执裁安排</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="8" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 裁判组管理标签页 -->
+<div id="groups-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>裁判组列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="search-box">
+                    <input type="text" id="groupSearch" class="form-control" placeholder="搜索裁判组..." onkeyup="filterGroups()">
+                </div>
+                <button class="btn btn-primary" onclick="showAddGroupModal()">+ 添加裁判组</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="groupsTable">
+                    <thead>
+                        <tr>
+                            <th>裁判组名称</th>
+                            <th>负责项目</th>
+                            <th>组长</th>
+                            <th>成员数</th>
+                            <th>执裁安排</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="6" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 执裁安排标签页 -->
+<div id="arrangements-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>执裁安排列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="search-box">
+                    <input type="text" id="arrangementSearch" class="form-control" placeholder="搜索..." onkeyup="filterArrangements()">
+                </div>
+                <select id="arrangementStatusFilter" class="form-control" onchange="filterArrangements()" style="max-width: 150px;">
+                    <option value="">全部状态</option>
+                    <option value="已签到">已签到</option>
+                    <option value="未签到">未签到</option>
+                </select>
+                <button class="btn btn-secondary" onclick="loadTodayArrangements()">今日安排</button>
+                <button class="btn btn-secondary" onclick="loadUpcomingArrangements()">即将进行</button>
+                <button class="btn btn-primary" onclick="showAddArrangementModal()">+ 添加安排</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="arrangementsTable">
+                    <thead>
+                        <tr>
+                            <th>裁判</th>
+                            <th>项目</th>
+                            <th>裁判组</th>
+                            <th>执裁时间</th>
+                            <th>岗位</th>
+                            <th>签到状态</th>
+                            <th>评价</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="8" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑裁判模态框 -->
+<div id="refereeModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeRefereeModal()">&times;</span>
+        <h2 id="refereeModalTitle">添加裁判</h2>
+        <form id="refereeForm" onsubmit="saveReferee(event)">
+            <input type="hidden" id="refereeId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">姓名 *</label>
+                    <input type="text" id="refereeName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">性别 *</label>
+                    <select id="refereeGender" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">裁判等级 *</label>
+                    <select id="refereeLevel" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="国家级">国家级</option>
+                        <option value="省级">省级</option>
+                        <option value="大湾区认证">大湾区认证</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">湾区认证 *</label>
+                    <select id="refereeBayCert" class="form-control" required>
+                        <option value="无">无</option>
+                        <option value="有">有</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">负责项目</label>
+                <input type="text" id="refereeChargeEvent" class="form-control" placeholder="如：田径、游泳等">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="text" id="refereePhone" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">多语言能力</label>
+                    <input type="text" id="refereeMultiLanguage" class="form-control" placeholder="如：中/英/粤">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">执裁历史</label>
+                <textarea id="refereeHistory" class="form-control" rows="3" placeholder="过往执裁经历"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeRefereeModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加/编辑裁判组模态框 -->
+<div id="groupModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeGroupModal()">&times;</span>
+        <h2 id="groupModalTitle">添加裁判组</h2>
+        <form id="groupForm" onsubmit="saveGroup(event)">
+            <input type="hidden" id="groupId">
+            <div class="form-group">
+                <label class="form-label">裁判组名称 *</label>
+                <input type="text" id="groupName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">负责项目 *</label>
+                <select id="groupEvent" class="form-control" required>
+                    <option value="">请选择项目</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">组长</label>
+                <select id="groupLeader" class="form-control">
+                    <option value="">请选择组长</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeGroupModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加/编辑执裁安排模态框 -->
+<div id="arrangementModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeArrangementModal()">&times;</span>
+        <h2 id="arrangementModalTitle">添加执裁安排</h2>
+        <form id="arrangementForm" onsubmit="saveArrangement(event)">
+            <input type="hidden" id="arrangementId">
+            <div class="form-group">
+                <label class="form-label">裁判组 *</label>
+                <select id="arrangementGroup" class="form-control" required onchange="updateArrangementEvent()">
+                    <option value="">请选择裁判组</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">裁判 *</label>
+                <select id="arrangementReferee" class="form-control" required>
+                    <option value="">请选择裁判</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">项目 *</label>
+                <select id="arrangementEvent" class="form-control" required>
+                    <option value="">请选择项目</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">执裁时间 *</label>
+                    <input type="datetime-local" id="arrangementDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">执裁岗位</label>
+                    <input type="text" id="arrangementPosition" class="form-control" placeholder="如：主裁、边裁等">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeArrangementModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 评价模态框 -->
+<div id="evaluateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEvaluateModal()">&times;</span>
+        <h2>执裁评价</h2>
+        <form id="evaluateForm" onsubmit="saveEvaluation(event)">
+            <input type="hidden" id="evaluateArrangementId">
+            <div class="form-group">
+                <label class="form-label">评价内容 *</label>
+                <textarea id="evaluateContent" class="form-control" rows="5" required placeholder="请输入执裁评价..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeEvaluateModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    margin: 3% auto;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 全局数据
+let refereesData = [];
+let groupsData = [];
+let arrangementsData = [];
+let eventsData = [];
+let currentTab = 'referees';
+
+// 标签页切换
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(`${tab}-tab`).classList.add('active');
+    
+    // 加载对应数据
+    if (tab === 'referees') {
+        loadReferees();
+    } else if (tab === 'groups') {
+        loadGroups();
+        loadEvents(); // 加载事件列表用于下拉框
+    } else if (tab === 'arrangements') {
+        loadArrangements();
+        loadEvents();
+        loadRefereesForSelect();
+        loadGroupsForSelect();
+    }
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadReferees();
+    loadEvents();
+    
+    // 设置标签页按钮点击事件
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            switchTab(this.textContent.includes('裁判管理') ? 'referees' : 
+                     this.textContent.includes('裁判组') ? 'groups' : 'arrangements');
+        });
+    });
+});
+
+// ==================== 裁判管理 ====================
+function loadReferees() {
+    api.get('/api/referees/referees/')
+        .then(data => {
+            refereesData = data.results || data;
+            displayReferees(refereesData);
+        })
+        .catch(err => {
+            console.error('加载裁判失败:', err);
+            document.querySelector('#refereesTable tbody').innerHTML = 
+                '<tr><td colspan="8" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displayReferees(referees) {
+    const tbody = document.querySelector('#refereesTable tbody');
+    if (referees.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = referees.map(ref => `
+        <tr>
+            <td>${ref.name}</td>
+            <td>${ref.gender}</td>
+            <td><span class="badge badge-info">${ref.referee_level}</span></td>
+            <td>${ref.charge_event || '-'}</td>
+            <td>${ref.phone || '-'}</td>
+            <td>${ref.bay_cert === '有' ? '<span class="badge badge-success">有</span>' : '<span class="badge">无</span>'}</td>
+            <td>${ref.arrangements_count || 0}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="viewRefereeHistory(${ref.id})">历史</button>
+                <button class="btn btn-sm btn-primary" onclick="editReferee(${ref.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteReferee(${ref.id})">删除</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterReferees() {
+    const keyword = document.getElementById('refereeSearch').value.toLowerCase();
+    const level = document.getElementById('refereeLevelFilter').value;
+    
+    let filtered = refereesData.filter(ref => {
+        const matchKeyword = !keyword || 
+            ref.name.toLowerCase().includes(keyword) ||
+            (ref.charge_event && ref.charge_event.toLowerCase().includes(keyword)) ||
+            (ref.phone && ref.phone.includes(keyword));
+        const matchLevel = !level || ref.referee_level === level;
+        return matchKeyword && matchLevel;
+    });
+    
+    displayReferees(filtered);
+}
+
+function showAddRefereeModal() {
+    document.getElementById('refereeId').value = '';
+    document.getElementById('refereeForm').reset();
+    document.getElementById('refereeModalTitle').textContent = '添加裁判';
+    document.getElementById('refereeModal').style.display = 'block';
+}
+
+function editReferee(id) {
+    const ref = refereesData.find(r => r.id === id);
+    if (!ref) return;
+    
+    document.getElementById('refereeId').value = ref.id;
+    document.getElementById('refereeName').value = ref.name;
+    document.getElementById('refereeGender').value = ref.gender;
+    document.getElementById('refereeLevel').value = ref.referee_level;
+    document.getElementById('refereeBayCert').value = ref.bay_cert;
+    document.getElementById('refereeChargeEvent').value = ref.charge_event || '';
+    document.getElementById('refereePhone').value = ref.phone || '';
+    document.getElementById('refereeMultiLanguage').value = ref.multi_language || '';
+    document.getElementById('refereeHistory').value = ref.referee_history || '';
+    
+    document.getElementById('refereeModalTitle').textContent = '编辑裁判';
+    document.getElementById('refereeModal').style.display = 'block';
+}
+
+function closeRefereeModal() {
+    document.getElementById('refereeModal').style.display = 'none';
+}
+
+function saveReferee(e) {
+    e.preventDefault();
+    const id = document.getElementById('refereeId').value;
+    const data = {
+        name: document.getElementById('refereeName').value.trim(),
+        gender: document.getElementById('refereeGender').value,
+        referee_level: document.getElementById('refereeLevel').value,
+        bay_cert: document.getElementById('refereeBayCert').value,
+        charge_event: document.getElementById('refereeChargeEvent').value.trim() || null,
+        phone: document.getElementById('refereePhone').value.trim() || null,
+        multi_language: document.getElementById('refereeMultiLanguage').value.trim() || null,
+        referee_history: document.getElementById('refereeHistory').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/referees/referees/${id}/`, data)
+        : api.post('/api/referees/referees/', data);
+    
+    promise.then(() => {
+        closeRefereeModal();
+        loadReferees();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteReferee(id) {
+    if (!confirm('确定要删除这个裁判吗？')) return;
+    
+    api.delete(`/api/referees/referees/${id}/`)
+        .then(() => {
+            loadReferees();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function viewRefereeHistory(id) {
+    api.get(`/api/referees/referees/${id}/history/`)
+        .then(data => {
+            let historyText = `裁判：${data.referee_name}\n等级：${data.referee_level}\n总安排：${data.total_arrangements}\n\n执裁历史：\n`;
+            if (data.history && data.history.length > 0) {
+                data.history.forEach(h => {
+                    historyText += `\n${h.event_name} - ${new Date(h.arrange_date).toLocaleString('zh-CN')}\n`;
+                    historyText += `岗位：${h.position || '-'}\n`;
+                    historyText += `评价：${h.evaluation || '无'}\n`;
+                });
+            } else {
+                historyText += '暂无执裁历史';
+            }
+            alert(historyText);
+        })
+        .catch(err => {
+            console.error('获取历史失败:', err);
+            alert('获取历史失败');
+        });
+}
+
+// ==================== 裁判组管理 ====================
+function loadGroups() {
+    api.get('/api/referees/referee-groups/')
+        .then(data => {
+            groupsData = data.results || data;
+            displayGroups(groupsData);
+        })
+        .catch(err => {
+            console.error('加载裁判组失败:', err);
+            document.querySelector('#groupsTable tbody').innerHTML = 
+                '<tr><td colspan="6" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displayGroups(groups) {
+    const tbody = document.querySelector('#groupsTable tbody');
+    if (groups.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = groups.map(group => `
+        <tr>
+            <td>${group.group_name}</td>
+            <td>${group.event_name || '-'}</td>
+            <td>${group.leader_referee_name || '-'}</td>
+            <td>${group.referees_count || 0}</td>
+            <td>${group.arrangements_count || 0}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="viewGroupMembers(${group.id})">成员</button>
+                <button class="btn btn-sm btn-primary" onclick="editGroup(${group.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteGroup(${group.id})">删除</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterGroups() {
+    const keyword = document.getElementById('groupSearch').value.toLowerCase();
+    const filtered = groupsData.filter(group => 
+        !keyword || 
+        group.group_name.toLowerCase().includes(keyword) ||
+        (group.event_name && group.event_name.toLowerCase().includes(keyword))
+    );
+    displayGroups(filtered);
+}
+
+function loadEvents() {
+    api.get('/api/events/events/')
+        .then(data => {
+            eventsData = data.results || data;
+            const select = document.getElementById('groupEvent');
+            if (select) {
+                select.innerHTML = '<option value="">请选择项目</option>' + 
+                    eventsData.map(e => `<option value="${e.id}">${e.event_name}</option>`).join('');
+            }
+            const arrSelect = document.getElementById('arrangementEvent');
+            if (arrSelect) {
+                arrSelect.innerHTML = '<option value="">请选择项目</option>' + 
+                    eventsData.map(e => `<option value="${e.id}">${e.event_name}</option>`).join('');
+            }
+        })
+        .catch(err => console.error('加载事件失败:', err));
+}
+
+function loadRefereesForSelect() {
+    api.get('/api/referees/referees/')
+        .then(data => {
+            const refs = data.results || data;
+            const select = document.getElementById('arrangementReferee');
+            if (select) {
+                select.innerHTML = '<option value="">请选择裁判</option>' + 
+                    refs.map(r => `<option value="${r.id}">${r.name} (${r.referee_level})</option>`).join('');
+            }
+            const leaderSelect = document.getElementById('groupLeader');
+            if (leaderSelect) {
+                leaderSelect.innerHTML = '<option value="">请选择组长</option>' + 
+                    refs.map(r => `<option value="${r.id}">${r.name} (${r.referee_level})</option>`).join('');
+            }
+        })
+        .catch(err => console.error('加载裁判失败:', err));
+}
+
+function loadGroupsForSelect() {
+    api.get('/api/referees/referee-groups/')
+        .then(data => {
+            const groups = data.results || data;
+            const select = document.getElementById('arrangementGroup');
+            if (select) {
+                select.innerHTML = '<option value="">请选择裁判组</option>' + 
+                    groups.map(g => `<option value="${g.id}">${g.group_name}</option>`).join('');
+            }
+        })
+        .catch(err => console.error('加载裁判组失败:', err));
+}
+
+function showAddGroupModal() {
+    document.getElementById('groupId').value = '';
+    document.getElementById('groupForm').reset();
+    document.getElementById('groupModalTitle').textContent = '添加裁判组';
+    loadEvents();
+    loadRefereesForSelect();
+    document.getElementById('groupModal').style.display = 'block';
+}
+
+function editGroup(id) {
+    const group = groupsData.find(g => g.id === id);
+    if (!group) return;
+    
+    document.getElementById('groupId').value = group.id;
+    document.getElementById('groupName').value = group.group_name;
+    document.getElementById('groupEvent').value = group.event_id || '';
+    document.getElementById('groupLeader').value = group.leader_referee || '';
+    
+    document.getElementById('groupModalTitle').textContent = '编辑裁判组';
+    loadEvents();
+    loadRefereesForSelect();
+    document.getElementById('groupModal').style.display = 'block';
+}
+
+function closeGroupModal() {
+    document.getElementById('groupModal').style.display = 'none';
+}
+
+function saveGroup(e) {
+    e.preventDefault();
+    const id = document.getElementById('groupId').value;
+    const data = {
+        group_name: document.getElementById('groupName').value.trim(),
+        event: parseInt(document.getElementById('groupEvent').value),
+        leader_referee: document.getElementById('groupLeader').value ? parseInt(document.getElementById('groupLeader').value) : null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/referees/referee-groups/${id}/`, data)
+        : api.post('/api/referees/referee-groups/', data);
+    
+    promise.then(() => {
+        closeGroupModal();
+        loadGroups();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteGroup(id) {
+    if (!confirm('确定要删除这个裁判组吗？')) return;
+    
+    api.delete(`/api/referees/referee-groups/${id}/`)
+        .then(() => {
+            loadGroups();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function viewGroupMembers(id) {
+    api.get(`/api/referees/referee-groups/${id}/members/`)
+        .then(data => {
+            let membersText = '裁判组成员：\n\n';
+            if (data && data.length > 0) {
+                data.forEach(m => {
+                    membersText += `${m.name} (${m.referee_level})\n`;
+                });
+            } else {
+                membersText += '暂无成员';
+            }
+            alert(membersText);
+        })
+        .catch(err => {
+            console.error('获取成员失败:', err);
+            alert('获取成员失败');
+        });
+}
+
+// ==================== 执裁安排管理 ====================
+function loadArrangements() {
+    api.get('/api/referees/referee-arrangements/')
+        .then(data => {
+            arrangementsData = data.results || data;
+            displayArrangements(arrangementsData);
+        })
+        .catch(err => {
+            console.error('加载执裁安排失败:', err);
+            document.querySelector('#arrangementsTable tbody').innerHTML = 
+                '<tr><td colspan="8" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displayArrangements(arrangements) {
+    const tbody = document.querySelector('#arrangementsTable tbody');
+    if (arrangements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = arrangements.map(arr => {
+        const date = new Date(arr.arrange_date);
+        const statusBadge = arr.check_in_status === '已签到' 
+            ? '<span class="badge badge-success">已签到</span>'
+            : '<span class="badge badge-warning">未签到</span>';
+        
+        return `
+        <tr>
+            <td>${arr.referee_name || '-'}</td>
+            <td>${arr.event_name || '-'}</td>
+            <td>${arr.referee_group_name || '-'}</td>
+            <td>${date.toLocaleString('zh-CN')}</td>
+            <td>${arr.position || '-'}</td>
+            <td>${statusBadge}</td>
+            <td>${arr.evaluation ? (arr.evaluation.length > 20 ? arr.evaluation.substring(0, 20) + '...' : arr.evaluation) : '-'}</td>
+            <td>
+                ${arr.check_in_status === '未签到' ? 
+                    `<button class="btn btn-sm btn-success" onclick="checkIn(${arr.id})">签到</button>` : ''}
+                <button class="btn btn-sm btn-outline" onclick="evaluateArrangement(${arr.id})">评价</button>
+                <button class="btn btn-sm btn-primary" onclick="editArrangement(${arr.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteArrangement(${arr.id})">删除</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function filterArrangements() {
+    const keyword = document.getElementById('arrangementSearch').value.toLowerCase();
+    const status = document.getElementById('arrangementStatusFilter').value;
+    
+    let filtered = arrangementsData.filter(arr => {
+        const matchKeyword = !keyword || 
+            (arr.referee_name && arr.referee_name.toLowerCase().includes(keyword)) ||
+            (arr.event_name && arr.event_name.toLowerCase().includes(keyword)) ||
+            (arr.position && arr.position.toLowerCase().includes(keyword));
+        const matchStatus = !status || arr.check_in_status === status;
+        return matchKeyword && matchStatus;
+    });
+    
+    displayArrangements(filtered);
+}
+
+function loadTodayArrangements() {
+    api.get('/api/referees/referee-arrangements/today/')
+        .then(data => {
+            arrangementsData = data;
+            displayArrangements(arrangementsData);
+        })
+        .catch(err => {
+            console.error('加载今日安排失败:', err);
+            alert('加载失败');
+        });
+}
+
+function loadUpcomingArrangements() {
+    api.get('/api/referees/referee-arrangements/upcoming/')
+        .then(data => {
+            arrangementsData = data;
+            displayArrangements(arrangementsData);
+        })
+        .catch(err => {
+            console.error('加载即将进行的安排失败:', err);
+            alert('加载失败');
+        });
+}
+
+function showAddArrangementModal() {
+    document.getElementById('arrangementId').value = '';
+    document.getElementById('arrangementForm').reset();
+    document.getElementById('arrangementModalTitle').textContent = '添加执裁安排';
+    loadGroupsForSelect();
+    loadRefereesForSelect();
+    loadEvents();
+    document.getElementById('arrangementModal').style.display = 'block';
+}
+
+function updateArrangementEvent() {
+    const groupId = document.getElementById('arrangementGroup').value;
+    if (!groupId) return;
+    
+    const group = groupsData.find(g => g.id == groupId);
+    if (group && group.event_id) {
+        document.getElementById('arrangementEvent').value = group.event_id;
+    }
+}
+
+function editArrangement(id) {
+    const arr = arrangementsData.find(a => a.id === id);
+    if (!arr) return;
+    
+    document.getElementById('arrangementId').value = arr.id;
+    document.getElementById('arrangementGroup').value = arr.referee_group_id || '';
+    document.getElementById('arrangementReferee').value = arr.referee_id || '';
+    document.getElementById('arrangementEvent').value = arr.event_id || '';
+    
+    const date = new Date(arr.arrange_date);
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    document.getElementById('arrangementDate').value = localDate.toISOString().slice(0, 16);
+    
+    document.getElementById('arrangementPosition').value = arr.position || '';
+    
+    document.getElementById('arrangementModalTitle').textContent = '编辑执裁安排';
+    loadGroupsForSelect();
+    loadRefereesForSelect();
+    loadEvents();
+    document.getElementById('arrangementModal').style.display = 'block';
+}
+
+function closeArrangementModal() {
+    document.getElementById('arrangementModal').style.display = 'none';
+}
+
+function saveArrangement(e) {
+    e.preventDefault();
+    const id = document.getElementById('arrangementId').value;
+    const dateStr = document.getElementById('arrangementDate').value;
+    const date = new Date(dateStr);
+    
+    const data = {
+        referee_group: parseInt(document.getElementById('arrangementGroup').value),
+        referee: parseInt(document.getElementById('arrangementReferee').value),
+        event: parseInt(document.getElementById('arrangementEvent').value),
+        arrange_date: date.toISOString(),
+        position: document.getElementById('arrangementPosition').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/referees/referee-arrangements/${id}/`, data)
+        : api.post('/api/referees/referee-arrangements/', data);
+    
+    promise.then(() => {
+        closeArrangementModal();
+        loadArrangements();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteArrangement(id) {
+    if (!confirm('确定要删除这个执裁安排吗？')) return;
+    
+    api.delete(`/api/referees/referee-arrangements/${id}/`)
+        .then(() => {
+            loadArrangements();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function checkIn(id) {
+    api.post(`/api/referees/referee-arrangements/${id}/check_in/`)
+        .then(data => {
+            loadArrangements();
+            alert('签到成功！');
+        })
+        .catch(err => {
+            console.error('签到失败:', err);
+            alert('签到失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function evaluateArrangement(id) {
+    const arr = arrangementsData.find(a => a.id === id);
+    document.getElementById('evaluateArrangementId').value = id;
+    document.getElementById('evaluateContent').value = arr?.evaluation || '';
+    document.getElementById('evaluateModal').style.display = 'block';
+}
+
+function closeEvaluateModal() {
+    document.getElementById('evaluateModal').style.display = 'none';
+}
+
+function saveEvaluation(e) {
+    e.preventDefault();
+    const id = document.getElementById('evaluateArrangementId').value;
+    const evaluation = document.getElementById('evaluateContent').value.trim();
+    
+    api.post(`/api/referees/referee-arrangements/${id}/evaluate/`, { evaluation })
+        .then(() => {
+            closeEvaluateModal();
+            loadArrangements();
+            alert('评价保存成功！');
+        })
+        .catch(err => {
+            console.error('保存评价失败:', err);
+            alert('保存评价失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+</script>
+{% endblock %}
+

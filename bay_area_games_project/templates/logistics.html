@@ -1,0 +1,1108 @@
+{% extends "base.html" %}
+
+{% block title %}后勤保障管理 - 大湾区运动会管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>后勤保障管理</h1>
+</div>
+
+<!-- 标签页导航 -->
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('suppliers')">供应商管理</button>
+    <button class="tab-btn" onclick="switchTab('logistics')">后勤保障</button>
+    <button class="tab-btn" onclick="switchTab('volunteers')">志愿者管理</button>
+</div>
+
+<!-- 供应商管理标签页 -->
+<div id="suppliers-tab" class="tab-content active">
+    <div class="card">
+        <div class="card-header">
+            <h3>供应商列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="search-box">
+                    <input type="text" id="supplierSearch" class="form-control" placeholder="搜索供应商..." onkeyup="filterSuppliers()">
+                </div>
+                <select id="supplierTypeFilter" class="form-control" onchange="filterSuppliers()" style="max-width: 150px;">
+                    <option value="">全部类型</option>
+                    <option value="餐饮">餐饮</option>
+                    <option value="住宿">住宿</option>
+                    <option value="医疗">医疗</option>
+                    <option value="交通">交通</option>
+                    <option value="器材">器材</option>
+                </select>
+                <button class="btn btn-secondary" onclick="showSupplierStatistics()">统计</button>
+                <button class="btn btn-primary" onclick="showAddSupplierModal()">+ 添加供应商</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="suppliersTable">
+                    <thead>
+                        <tr>
+                            <th>供应商名称</th>
+                            <th>服务类型</th>
+                            <th>联系人</th>
+                            <th>联系电话</th>
+                            <th>履约评分</th>
+                            <th>保障记录</th>
+                            <th>总费用</th>
+                            <th>平均满意度</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="9" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 后勤保障标签页 -->
+<div id="logistics-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>后勤保障明细列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="search-box">
+                    <input type="text" id="logisticsSearch" class="form-control" placeholder="搜索..." onkeyup="filterLogistics()">
+                </div>
+                <select id="logisticsTypeFilter" class="form-control" onchange="filterLogistics()" style="max-width: 150px;">
+                    <option value="">全部类型</option>
+                    <option value="餐饮">餐饮</option>
+                    <option value="住宿">住宿</option>
+                    <option value="医疗">医疗</option>
+                    <option value="交通">交通</option>
+                    <option value="器材">器材</option>
+                </select>
+                <select id="logisticsObjectFilter" class="form-control" onchange="filterLogistics()" style="max-width: 150px;">
+                    <option value="">全部对象</option>
+                    <option value="运动员">运动员</option>
+                    <option value="裁判">裁判</option>
+                    <option value="工作人员">工作人员</option>
+                </select>
+                <button class="btn btn-secondary" onclick="showLogisticsStatistics()">统计</button>
+                <button class="btn btn-primary" onclick="showAddLogisticsModal()">+ 添加保障</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="logisticsTable">
+                    <thead>
+                        <tr>
+                            <th>保障类型</th>
+                            <th>服务对象</th>
+                            <th>供应商</th>
+                            <th>服务单号</th>
+                            <th>费用金额</th>
+                            <th>服务时间</th>
+                            <th>服务人员</th>
+                            <th>满意度</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="9" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 志愿者管理标签页 -->
+<div id="volunteers-tab" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3>志愿者列表</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="search-box">
+                    <input type="text" id="volunteerSearch" class="form-control" placeholder="搜索志愿者..." onkeyup="filterVolunteers()">
+                </div>
+                <select id="volunteerPostFilter" class="form-control" onchange="filterVolunteers()" style="max-width: 150px;">
+                    <option value="">全部岗位</option>
+                </select>
+                <select id="volunteerTrainingFilter" class="form-control" onchange="filterVolunteers()" style="max-width: 150px;">
+                    <option value="">全部状态</option>
+                    <option value="已培训">已培训</option>
+                    <option value="未培训">未培训</option>
+                </select>
+                <button class="btn btn-secondary" onclick="showVolunteerStatistics()">统计</button>
+                <button class="btn btn-primary" onclick="showAddVolunteerModal()">+ 添加志愿者</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="data-table" id="volunteersTable">
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>院校/单位</th>
+                            <th>服务岗位</th>
+                            <th>服务时段</th>
+                            <th>培训状态</th>
+                            <th>服务工时</th>
+                            <th>评价</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="9" class="loading">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加/编辑供应商模态框 -->
+<div id="supplierModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSupplierModal()">&times;</span>
+        <h2 id="supplierModalTitle">添加供应商</h2>
+        <form id="supplierForm" onsubmit="saveSupplier(event)">
+            <input type="hidden" id="supplierId">
+            <div class="form-group">
+                <label class="form-label">供应商名称 *</label>
+                <input type="text" id="supplierName" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">服务类型 *</label>
+                <select id="supplierServiceType" class="form-control" required>
+                    <option value="">请选择</option>
+                    <option value="餐饮">餐饮</option>
+                    <option value="住宿">住宿</option>
+                    <option value="医疗">医疗</option>
+                    <option value="交通">交通</option>
+                    <option value="器材">器材</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">大湾区注册地址</label>
+                <input type="text" id="supplierAddress" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="form-label">资质证书地址</label>
+                <input type="text" id="supplierQualification" class="form-control" placeholder="URL或文件路径">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">合作期限</label>
+                    <input type="text" id="supplierPeriod" class="form-control" placeholder="如：2025-01-01至2025-12-31">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">履约评分</label>
+                    <input type="number" id="supplierScore" class="form-control" step="0.1" min="0" max="5" placeholder="0-5分">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">联系人</label>
+                    <input type="text" id="supplierContact" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="text" id="supplierPhone" class="form-control">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeSupplierModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加/编辑后勤保障模态框 -->
+<div id="logisticsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeLogisticsModal()">&times;</span>
+        <h2 id="logisticsModalTitle">添加后勤保障</h2>
+        <form id="logisticsForm" onsubmit="saveLogistics(event)">
+            <input type="hidden" id="logisticsId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">保障类型 *</label>
+                    <select id="logisticsServiceType" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="餐饮">餐饮</option>
+                        <option value="住宿">住宿</option>
+                        <option value="医疗">医疗</option>
+                        <option value="交通">交通</option>
+                        <option value="器材">器材</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">服务对象类型 *</label>
+                    <select id="logisticsObjectType" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="运动员">运动员</option>
+                        <option value="裁判">裁判</option>
+                        <option value="工作人员">工作人员</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">服务对象ID *</label>
+                <input type="number" id="logisticsObjectId" class="form-control" required min="1" placeholder="输入服务对象的ID">
+            </div>
+            <div class="form-group">
+                <label class="form-label">供应商</label>
+                <select id="logisticsSupplier" class="form-control">
+                    <option value="">请选择供应商</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">服务单号</label>
+                    <input type="text" id="logisticsServiceNo" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">费用金额</label>
+                    <input type="number" id="logisticsCost" class="form-control" step="0.01" min="0">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">服务时间</label>
+                    <input type="datetime-local" id="logisticsServiceTime" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">服务人员</label>
+                    <input type="text" id="logisticsStaff" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">满意度评分</label>
+                <input type="number" id="logisticsSatisfaction" class="form-control" min="1" max="5" placeholder="1-5分">
+            </div>
+            <div class="form-group">
+                <label class="form-label">异常记录</label>
+                <textarea id="logisticsException" class="form-control" rows="3" placeholder="如有异常情况请记录"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeLogisticsModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加/编辑志愿者模态框 -->
+<div id="volunteerModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeVolunteerModal()">&times;</span>
+        <h2 id="volunteerModalTitle">添加志愿者</h2>
+        <form id="volunteerForm" onsubmit="saveVolunteer(event)">
+            <input type="hidden" id="volunteerId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">姓名 *</label>
+                    <input type="text" id="volunteerName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">性别 *</label>
+                    <select id="volunteerGender" class="form-control" required>
+                        <option value="">请选择</option>
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">大湾区院校/单位</label>
+                <input type="text" id="volunteerSchool" class="form-control">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">服务岗位</label>
+                    <input type="text" id="volunteerPost" class="form-control" placeholder="如：引导员、检票员等">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">联系电话</label>
+                    <input type="text" id="volunteerPhone" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">服务时段</label>
+                <input type="text" id="volunteerTimeSlot" class="form-control" placeholder="如：上午9:00-12:00">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">培训状态</label>
+                    <select id="volunteerTraining" class="form-control">
+                        <option value="未培训">未培训</option>
+                        <option value="已培训">已培训</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">服务工时</label>
+                    <input type="number" id="volunteerHours" class="form-control" step="0.1" min="0" value="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">服务评价</label>
+                <textarea id="volunteerEvaluation" class="form-control" rows="3" placeholder="服务评价"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeVolunteerModal()">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: var(--card-bg);
+    margin: 3% auto;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 600px;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+}
+
+.close {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: var(--text-primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 全局数据
+let suppliersData = [];
+let logisticsData = [];
+let volunteersData = [];
+let currentTab = 'suppliers';
+
+// 标签页切换
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.target.classList.add('active');
+    document.getElementById(`${tab}-tab`).classList.add('active');
+    
+    // 加载对应数据
+    if (tab === 'suppliers') {
+        loadSuppliers();
+    } else if (tab === 'logistics') {
+        loadLogistics();
+        loadSuppliersForSelect();
+    } else if (tab === 'volunteers') {
+        loadVolunteers();
+    }
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadSuppliers();
+    
+    // 设置标签页按钮点击事件
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tabMap = {
+                '供应商管理': 'suppliers',
+                '后勤保障': 'logistics',
+                '志愿者管理': 'volunteers'
+            };
+            switchTab(tabMap[this.textContent]);
+        });
+    });
+});
+
+// ==================== 供应商管理 ====================
+function loadSuppliers() {
+    api.get('/api/logistics/suppliers/')
+        .then(data => {
+            suppliersData = data.results || data;
+            displaySuppliers(suppliersData);
+        })
+        .catch(err => {
+            console.error('加载供应商失败:', err);
+            document.querySelector('#suppliersTable tbody').innerHTML = 
+                '<tr><td colspan="9" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displaySuppliers(suppliers) {
+    const tbody = document.querySelector('#suppliersTable tbody');
+    if (suppliers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = suppliers.map(supplier => {
+        const scoreBadge = supplier.performance_score 
+            ? `<span class="badge ${supplier.performance_score >= 4 ? 'badge-success' : supplier.performance_score >= 3 ? 'badge-warning' : ''}">${supplier.performance_score}</span>`
+            : '-';
+        
+        return `
+        <tr>
+            <td>${supplier.supplier_name}</td>
+            <td><span class="badge badge-info">${supplier.service_type}</span></td>
+            <td>${supplier.contact_name || '-'}</td>
+            <td>${supplier.contact_phone || '-'}</td>
+            <td>${scoreBadge}</td>
+            <td>${supplier.logistics_count || 0}</td>
+            <td>${supplier.total_cost ? '¥' + supplier.total_cost.toFixed(2) : '-'}</td>
+            <td>${supplier.avg_satisfaction || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-outline" onclick="viewSupplierLogistics(${supplier.id})">保障</button>
+                <button class="btn btn-sm btn-primary" onclick="editSupplier(${supplier.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSupplier(${supplier.id})">删除</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function filterSuppliers() {
+    const keyword = document.getElementById('supplierSearch').value.toLowerCase();
+    const type = document.getElementById('supplierTypeFilter').value;
+    
+    let filtered = suppliersData.filter(supplier => {
+        const matchKeyword = !keyword || 
+            supplier.supplier_name.toLowerCase().includes(keyword) ||
+            (supplier.contact_name && supplier.contact_name.toLowerCase().includes(keyword));
+        const matchType = !type || supplier.service_type === type;
+        return matchKeyword && matchType;
+    });
+    
+    displaySuppliers(filtered);
+}
+
+function showAddSupplierModal() {
+    document.getElementById('supplierId').value = '';
+    document.getElementById('supplierForm').reset();
+    document.getElementById('supplierModalTitle').textContent = '添加供应商';
+    document.getElementById('supplierModal').style.display = 'block';
+}
+
+function editSupplier(id) {
+    const supplier = suppliersData.find(s => s.id === id);
+    if (!supplier) return;
+    
+    document.getElementById('supplierId').value = supplier.id;
+    document.getElementById('supplierName').value = supplier.supplier_name;
+    document.getElementById('supplierServiceType').value = supplier.service_type;
+    document.getElementById('supplierAddress').value = supplier.bay_register_address || '';
+    document.getElementById('supplierQualification').value = supplier.qualification_url || '';
+    document.getElementById('supplierPeriod').value = supplier.coop_period || '';
+    document.getElementById('supplierScore').value = supplier.performance_score || '';
+    document.getElementById('supplierContact').value = supplier.contact_name || '';
+    document.getElementById('supplierPhone').value = supplier.contact_phone || '';
+    
+    document.getElementById('supplierModalTitle').textContent = '编辑供应商';
+    document.getElementById('supplierModal').style.display = 'block';
+}
+
+function closeSupplierModal() {
+    document.getElementById('supplierModal').style.display = 'none';
+}
+
+function saveSupplier(e) {
+    e.preventDefault();
+    const id = document.getElementById('supplierId').value;
+    const data = {
+        supplier_name: document.getElementById('supplierName').value.trim(),
+        service_type: document.getElementById('supplierServiceType').value,
+        bay_register_address: document.getElementById('supplierAddress').value.trim() || null,
+        qualification_url: document.getElementById('supplierQualification').value.trim() || null,
+        coop_period: document.getElementById('supplierPeriod').value.trim() || null,
+        performance_score: document.getElementById('supplierScore').value ? parseFloat(document.getElementById('supplierScore').value) : null,
+        contact_name: document.getElementById('supplierContact').value.trim() || null,
+        contact_phone: document.getElementById('supplierPhone').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/logistics/suppliers/${id}/`, data)
+        : api.post('/api/logistics/suppliers/', data);
+    
+    promise.then(() => {
+        closeSupplierModal();
+        loadSuppliers();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteSupplier(id) {
+    if (!confirm('确定要删除这个供应商吗？')) return;
+    
+    api.delete(`/api/logistics/suppliers/${id}/`)
+        .then(() => {
+            loadSuppliers();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function viewSupplierLogistics(id) {
+    api.get(`/api/logistics/suppliers/${id}/logistics/`)
+        .then(data => {
+            if (data && data.length > 0) {
+                let logisticsText = '后勤保障记录：\n\n';
+                data.forEach(l => {
+                    logisticsText += `${l.service_type} - ${l.service_object_name}\n`;
+                    logisticsText += `费用：${l.cost_amount ? '¥' + l.cost_amount : '-'}\n`;
+                    logisticsText += `满意度：${l.satisfaction_score || '-'}\n\n`;
+                });
+                alert(logisticsText);
+            } else {
+                alert('该供应商暂无保障记录');
+            }
+        })
+        .catch(err => {
+            console.error('获取保障记录失败:', err);
+            alert('获取保障记录失败');
+        });
+}
+
+function showSupplierStatistics() {
+    api.get('/api/logistics/suppliers/statistics/')
+        .then(data => {
+            let statsText = '供应商统计：\n\n';
+            statsText += `总数：${data.total}\n\n`;
+            statsText += '按类型分布：\n';
+            if (data.by_type && data.by_type.length > 0) {
+                data.by_type.forEach(t => {
+                    statsText += `${t.service_type}：${t.count}个\n`;
+                });
+            }
+            alert(statsText);
+        })
+        .catch(err => {
+            console.error('获取统计失败:', err);
+            alert('获取统计失败');
+        });
+}
+
+// ==================== 后勤保障管理 ====================
+function loadLogistics() {
+    api.get('/api/logistics/logistics-details/')
+        .then(data => {
+            logisticsData = data.results || data;
+            displayLogistics(logisticsData);
+        })
+        .catch(err => {
+            console.error('加载保障记录失败:', err);
+            document.querySelector('#logisticsTable tbody').innerHTML = 
+                '<tr><td colspan="9" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displayLogistics(logistics) {
+    const tbody = document.querySelector('#logisticsTable tbody');
+    if (logistics.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = logistics.map(l => {
+        const date = l.service_time ? new Date(l.service_time).toLocaleString('zh-CN') : '-';
+        const satisfaction = l.satisfaction_score 
+            ? `<span class="badge ${l.satisfaction_score >= 4 ? 'badge-success' : l.satisfaction_score >= 3 ? 'badge-warning' : ''}">${l.satisfaction_score}</span>`
+            : '-';
+        
+        return `
+        <tr>
+            <td><span class="badge badge-info">${l.service_type}</span></td>
+            <td>${l.service_object_name || `${l.service_object_type}#${l.service_object_id}`}</td>
+            <td>${l.supplier_name || '-'}</td>
+            <td>${l.service_no || '-'}</td>
+            <td>${l.cost_amount ? '¥' + l.cost_amount : '-'}</td>
+            <td>${date}</td>
+            <td>${l.staff_name || '-'}</td>
+            <td>${satisfaction}</td>
+            <td>
+                ${!l.satisfaction_score ? 
+                    `<button class="btn btn-sm btn-success" onclick="updateSatisfaction(${l.id})">评分</button>` : ''}
+                <button class="btn btn-sm btn-primary" onclick="editLogistics(${l.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteLogistics(${l.id})">删除</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function filterLogistics() {
+    const keyword = document.getElementById('logisticsSearch').value.toLowerCase();
+    const type = document.getElementById('logisticsTypeFilter').value;
+    const objectType = document.getElementById('logisticsObjectFilter').value;
+    
+    let filtered = logisticsData.filter(l => {
+        const matchKeyword = !keyword || 
+            (l.service_no && l.service_no.toLowerCase().includes(keyword)) ||
+            (l.staff_name && l.staff_name.toLowerCase().includes(keyword)) ||
+            (l.supplier_name && l.supplier_name.toLowerCase().includes(keyword));
+        const matchType = !type || l.service_type === type;
+        const matchObjectType = !objectType || l.service_object_type === objectType;
+        return matchKeyword && matchType && matchObjectType;
+    });
+    
+    displayLogistics(filtered);
+}
+
+function loadSuppliersForSelect() {
+    api.get('/api/logistics/suppliers/')
+        .then(data => {
+            const suppliers = data.results || data;
+            const select = document.getElementById('logisticsSupplier');
+            if (select) {
+                select.innerHTML = '<option value="">请选择供应商</option>' + 
+                    suppliers.map(s => `<option value="${s.id}">${s.supplier_name}</option>`).join('');
+            }
+        })
+        .catch(err => console.error('加载供应商失败:', err));
+}
+
+function showAddLogisticsModal() {
+    document.getElementById('logisticsId').value = '';
+    document.getElementById('logisticsForm').reset();
+    document.getElementById('logisticsModalTitle').textContent = '添加后勤保障';
+    loadSuppliersForSelect();
+    document.getElementById('logisticsModal').style.display = 'block';
+}
+
+function editLogistics(id) {
+    const l = logisticsData.find(log => log.id === id);
+    if (!l) return;
+    
+    document.getElementById('logisticsId').value = l.id;
+    document.getElementById('logisticsServiceType').value = l.service_type;
+    document.getElementById('logisticsObjectType').value = l.service_object_type;
+    document.getElementById('logisticsObjectId').value = l.service_object_id;
+    document.getElementById('logisticsSupplier').value = l.supplier_id || '';
+    document.getElementById('logisticsServiceNo').value = l.service_no || '';
+    document.getElementById('logisticsCost').value = l.cost_amount || '';
+    
+    if (l.service_time) {
+        const date = new Date(l.service_time);
+        const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        document.getElementById('logisticsServiceTime').value = localDate.toISOString().slice(0, 16);
+    }
+    
+    document.getElementById('logisticsStaff').value = l.staff_name || '';
+    document.getElementById('logisticsSatisfaction').value = l.satisfaction_score || '';
+    document.getElementById('logisticsException').value = l.exception_record || '';
+    
+    document.getElementById('logisticsModalTitle').textContent = '编辑后勤保障';
+    loadSuppliersForSelect();
+    document.getElementById('logisticsModal').style.display = 'block';
+}
+
+function closeLogisticsModal() {
+    document.getElementById('logisticsModal').style.display = 'none';
+}
+
+function saveLogistics(e) {
+    e.preventDefault();
+    const id = document.getElementById('logisticsId').value;
+    
+    const dateStr = document.getElementById('logisticsServiceTime').value;
+    let serviceTime = null;
+    if (dateStr) {
+        const date = new Date(dateStr);
+        serviceTime = date.toISOString();
+    }
+    
+    const data = {
+        service_type: document.getElementById('logisticsServiceType').value,
+        service_object_type: document.getElementById('logisticsObjectType').value,
+        service_object_id: parseInt(document.getElementById('logisticsObjectId').value),
+        supplier: document.getElementById('logisticsSupplier').value ? parseInt(document.getElementById('logisticsSupplier').value) : null,
+        service_no: document.getElementById('logisticsServiceNo').value.trim() || null,
+        cost_amount: document.getElementById('logisticsCost').value ? parseFloat(document.getElementById('logisticsCost').value) : null,
+        service_time: serviceTime,
+        staff_name: document.getElementById('logisticsStaff').value.trim() || null,
+        satisfaction_score: document.getElementById('logisticsSatisfaction').value ? parseInt(document.getElementById('logisticsSatisfaction').value) : null,
+        exception_record: document.getElementById('logisticsException').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/logistics/logistics-details/${id}/`, data)
+        : api.post('/api/logistics/logistics-details/', data);
+    
+    promise.then(() => {
+        closeLogisticsModal();
+        loadLogistics();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteLogistics(id) {
+    if (!confirm('确定要删除这条保障记录吗？')) return;
+    
+    api.delete(`/api/logistics/logistics-details/${id}/`)
+        .then(() => {
+            loadLogistics();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function updateSatisfaction(id) {
+    const score = prompt('请输入满意度评分（1-5分）：');
+    if (!score) return;
+    
+    const scoreNum = parseInt(score);
+    if (isNaN(scoreNum) || scoreNum < 1 || scoreNum > 5) {
+        alert('请输入1-5之间的数字');
+        return;
+    }
+    
+    api.post(`/api/logistics/logistics-details/${id}/update_satisfaction/`, { satisfaction_score: scoreNum })
+        .then(() => {
+            loadLogistics();
+            alert('评分已更新！');
+        })
+        .catch(err => {
+            console.error('更新失败:', err);
+            alert('更新失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function showLogisticsStatistics() {
+    api.get('/api/logistics/logistics-details/statistics/')
+        .then(data => {
+            let statsText = '后勤保障统计：\n\n';
+            statsText += `总记录数：${data.total}\n`;
+            statsText += `总费用：¥${data.total_cost.toFixed(2)}\n`;
+            statsText += `平均满意度：${data.avg_satisfaction || '-'}\n\n`;
+            statsText += '按类型分布：\n';
+            if (data.by_type && data.by_type.length > 0) {
+                data.by_type.forEach(t => {
+                    statsText += `${t.service_type}：${t.count}条\n`;
+                });
+            }
+            alert(statsText);
+        })
+        .catch(err => {
+            console.error('获取统计失败:', err);
+            alert('获取统计失败');
+        });
+}
+
+// ==================== 志愿者管理 ====================
+function loadVolunteers() {
+    api.get('/api/logistics/volunteers/')
+        .then(data => {
+            volunteersData = data.results || data;
+            displayVolunteers(volunteersData);
+            // 更新岗位下拉框选项
+            updatePostFilter();
+        })
+        .catch(err => {
+            console.error('加载志愿者失败:', err);
+            document.querySelector('#volunteersTable tbody').innerHTML = 
+                '<tr><td colspan="9" class="loading">加载失败</td></tr>';
+        });
+}
+
+function displayVolunteers(volunteers) {
+    const tbody = document.querySelector('#volunteersTable tbody');
+    if (volunteers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">暂无数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = volunteers.map(vol => {
+        const trainingBadge = vol.training_status === '已培训'
+            ? '<span class="badge badge-success">已培训</span>'
+            : '<span class="badge badge-warning">未培训</span>';
+        
+        return `
+        <tr>
+            <td>${vol.name}</td>
+            <td>${vol.gender}</td>
+            <td>${vol.bay_school_company || '-'}</td>
+            <td>${vol.service_post || '-'}</td>
+            <td>${vol.service_time_slot || '-'}</td>
+            <td>${trainingBadge}</td>
+            <td>${vol.working_hours || 0}小时</td>
+            <td>${vol.evaluation ? (vol.evaluation.length > 20 ? vol.evaluation.substring(0, 20) + '...' : vol.evaluation) : '-'}</td>
+            <td>
+                ${vol.training_status === '未培训' ? 
+                    `<button class="btn btn-sm btn-success" onclick="completeTraining(${vol.id})">完成培训</button>` : ''}
+                <button class="btn btn-sm btn-info" onclick="addWorkingHours(${vol.id})">+工时</button>
+                <button class="btn btn-sm btn-primary" onclick="editVolunteer(${vol.id})">编辑</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteVolunteer(${vol.id})">删除</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function updatePostFilter() {
+    const posts = [...new Set(volunteersData.map(v => v.service_post).filter(p => p))];
+    const select = document.getElementById('volunteerPostFilter');
+    if (select) {
+        select.innerHTML = '<option value="">全部岗位</option>' + 
+            posts.map(p => `<option value="${p}">${p}</option>`).join('');
+    }
+}
+
+function filterVolunteers() {
+    const keyword = document.getElementById('volunteerSearch').value.toLowerCase();
+    const post = document.getElementById('volunteerPostFilter').value;
+    const training = document.getElementById('volunteerTrainingFilter').value;
+    
+    let filtered = volunteersData.filter(vol => {
+        const matchKeyword = !keyword || 
+            vol.name.toLowerCase().includes(keyword) ||
+            (vol.bay_school_company && vol.bay_school_company.toLowerCase().includes(keyword)) ||
+            (vol.service_post && vol.service_post.toLowerCase().includes(keyword));
+        const matchPost = !post || vol.service_post === post;
+        const matchTraining = !training || vol.training_status === training;
+        return matchKeyword && matchPost && matchTraining;
+    });
+    
+    displayVolunteers(filtered);
+}
+
+function showAddVolunteerModal() {
+    document.getElementById('volunteerId').value = '';
+    document.getElementById('volunteerForm').reset();
+    document.getElementById('volunteerModalTitle').textContent = '添加志愿者';
+    document.getElementById('volunteerModal').style.display = 'block';
+}
+
+function editVolunteer(id) {
+    const vol = volunteersData.find(v => v.id === id);
+    if (!vol) return;
+    
+    document.getElementById('volunteerId').value = vol.id;
+    document.getElementById('volunteerName').value = vol.name;
+    document.getElementById('volunteerGender').value = vol.gender;
+    document.getElementById('volunteerSchool').value = vol.bay_school_company || '';
+    document.getElementById('volunteerPost').value = vol.service_post || '';
+    document.getElementById('volunteerPhone').value = vol.phone || '';
+    document.getElementById('volunteerTimeSlot').value = vol.service_time_slot || '';
+    document.getElementById('volunteerTraining').value = vol.training_status;
+    document.getElementById('volunteerHours').value = vol.working_hours || 0;
+    document.getElementById('volunteerEvaluation').value = vol.evaluation || '';
+    
+    document.getElementById('volunteerModalTitle').textContent = '编辑志愿者';
+    document.getElementById('volunteerModal').style.display = 'block';
+}
+
+function closeVolunteerModal() {
+    document.getElementById('volunteerModal').style.display = 'none';
+}
+
+function saveVolunteer(e) {
+    e.preventDefault();
+    const id = document.getElementById('volunteerId').value;
+    const data = {
+        name: document.getElementById('volunteerName').value.trim(),
+        gender: document.getElementById('volunteerGender').value,
+        bay_school_company: document.getElementById('volunteerSchool').value.trim() || null,
+        service_post: document.getElementById('volunteerPost').value.trim() || null,
+        phone: document.getElementById('volunteerPhone').value.trim() || null,
+        service_time_slot: document.getElementById('volunteerTimeSlot').value.trim() || null,
+        training_status: document.getElementById('volunteerTraining').value,
+        working_hours: parseFloat(document.getElementById('volunteerHours').value) || 0,
+        evaluation: document.getElementById('volunteerEvaluation').value.trim() || null,
+    };
+    
+    const promise = id 
+        ? api.put(`/api/logistics/volunteers/${id}/`, data)
+        : api.post('/api/logistics/volunteers/', data);
+    
+    promise.then(() => {
+        closeVolunteerModal();
+        loadVolunteers();
+        alert('保存成功！');
+    }).catch(err => {
+        console.error('保存失败:', err);
+        alert('保存失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+    });
+}
+
+function deleteVolunteer(id) {
+    if (!confirm('确定要删除这个志愿者吗？')) return;
+    
+    api.delete(`/api/logistics/volunteers/${id}/`)
+        .then(() => {
+            loadVolunteers();
+            alert('删除成功！');
+        })
+        .catch(err => {
+            console.error('删除失败:', err);
+            alert('删除失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function completeTraining(id) {
+    api.post(`/api/logistics/volunteers/${id}/complete_training/`)
+        .then(() => {
+            loadVolunteers();
+            alert('培训状态已更新！');
+        })
+        .catch(err => {
+            console.error('更新失败:', err);
+            alert('更新失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function addWorkingHours(id) {
+    const hours = prompt('请输入要增加的工时：');
+    if (!hours) return;
+    
+    const hoursNum = parseFloat(hours);
+    if (isNaN(hoursNum) || hoursNum < 0) {
+        alert('请输入有效的工时数');
+        return;
+    }
+    
+    api.post(`/api/logistics/volunteers/${id}/add_working_hours/`, { hours: hoursNum })
+        .then(() => {
+            loadVolunteers();
+            alert('工时已更新！');
+        })
+        .catch(err => {
+            console.error('更新失败:', err);
+            alert('更新失败：' + (err.response?.data?.detail || err.message || '未知错误'));
+        });
+}
+
+function showVolunteerStatistics() {
+    api.get('/api/logistics/volunteers/statistics/')
+        .then(data => {
+            let statsText = '志愿者统计：\n\n';
+            statsText += `总数：${data.total}\n`;
+            statsText += `已培训：${data.trained}\n`;
+            statsText += `未培训：${data.untrained}\n`;
+            statsText += `总服务工时：${data.total_hours.toFixed(1)}小时\n\n`;
+            statsText += '按岗位分布：\n';
+            if (data.by_post && data.by_post.length > 0) {
+                data.by_post.forEach(p => {
+                    statsText += `${p.service_post || '未分配'}：${p.count}人\n`;
+                });
+            }
+            alert(statsText);
+        })
+        .catch(err => {
+            console.error('获取统计失败:', err);
+            alert('获取统计失败');
+        });
+}
+</script>
+{% endblock %}
+
